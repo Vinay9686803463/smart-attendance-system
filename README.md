@@ -12,8 +12,8 @@ I enjoy building projects, learning new technologies, and exploring software dev
 ### 💻 Programming
 
 <p>
- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-plain.svg" width="65" height="65" />
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-plain.svg" width="65" height="65" />
+ <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-plain.svg" width="72" height="72" />
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-plain.svg" width="72" height="72" />
 </p>
 
 **Skills**
