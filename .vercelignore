@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+attendance.db
+.env
+.vscode/
+.git/
+server.log
+server.err
+_shot.mjs
+pw_install.log
