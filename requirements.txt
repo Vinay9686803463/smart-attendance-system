@@ -1,4 +1,3 @@
-Flask
-numpy
-opencv-contrib-python
-gunicorn
+flask
+opencv-python-headless
+pydantic

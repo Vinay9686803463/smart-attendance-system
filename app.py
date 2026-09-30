@@ -24,9 +24,18 @@ app.config["SECRET_KEY"] = os.environ.get("ATTENDANCE_SECRET_KEY", "change-this-
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "attendance.db"
-FACES_DIR = BASE_DIR / "static" / "faces"
-FACES_DIR.mkdir(parents=True, exist_ok=True)
+if os.environ.get("VERCEL"):
+    # Vercel serverless filesystem is read-only except /tmp (ephemeral:
+    # data resets between deployments/instances - use external DB for prod).
+    DATA_DIR = Path("/tmp/smart_attendance")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    DB_PATH = DATA_DIR / "attendance.db"
+    FACES_DIR = DATA_DIR / "faces"
+    FACES_DIR.mkdir(parents=True, exist_ok=True)
+else:
+    DB_PATH = BASE_DIR / "attendance.db"
+    FACES_DIR = BASE_DIR / "static" / "faces"
+    FACES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_db():
