@@ -1,0 +1,987 @@
+```html
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Student Attendance | Smart Attendance
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body class="student-page">
+
+
+<main class="student-portal">
+
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="student-topbar">
+
+
+        <a href="{{ url_for('dashboard') }}"
+           class="student-brand">
+
+
+            <span class="brand-mark">
+                S
+            </span>
+
+
+            <span>
+
+                <b>
+                    Smart Attendance
+                </b>
+
+                <small>
+                    Student Profile
+                </small>
+
+            </span>
+
+
+        </a>
+
+
+
+        <div class="student-user">
+
+
+            <span class="student-avatar">
+
+                {{ student['name'][0]|upper }}
+
+            </span>
+
+
+            <span>
+
+                <b>
+                    {{ student['name'] }}
+                </b>
+
+                <small>
+                    {{ student['register_no'] }}
+                </small>
+
+            </span>
+
+
+            <a href="{{ url_for('students') }}"
+               class="button secondary small">
+
+                All Students
+
+            </a>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
+    <nav class="student-nav">
+
+
+        <a class="active"
+           href="{{ url_for(
+               'student_attendance',
+               student_id=student['id']
+           ) }}">
+
+            Overview
+
+        </a>
+
+
+        <a href="{{ url_for('attendance') }}">
+
+            Face Attendance
+
+        </a>
+
+
+        <a href="{{ url_for('attendance') }}">
+
+            Scan QR
+
+        </a>
+
+
+        <a href="{{ url_for('students') }}">
+
+            All Students
+
+        </a>
+
+
+        <a href="{{ url_for('attendance_records') }}">
+
+            Records
+
+        </a>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         STUDENT HERO
+    ====================================================== -->
+
+    <section class="student-hero">
+
+
+        <div>
+
+
+            <p class="eyebrow">
+
+                STUDENT ATTENDANCE PROFILE
+
+            </p>
+
+
+            <h1>
+
+                {{ student['name'] }}
+
+            </h1>
+
+
+            <p>
+
+                Registration Number:
+
+                <strong>
+
+                    {{ student['register_no'] }}
+
+                </strong>
+
+            </p>
+
+
+            {% if total_days > 0 %}
+
+
+                <p>
+
+                    Attendance information for this
+                    student is shown below.
+
+                </p>
+
+
+            {% else %}
+
+
+                <p>
+
+                    No attendance has been recorded
+                    for this student yet.
+
+                </p>
+
+
+            {% endif %}
+
+
+
+            <a href="{{ url_for('attendance') }}"
+               class="student-primary">
+
+
+                Mark Attendance
+
+
+                <span>
+
+                    →
+
+                </span>
+
+
+            </a>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             STATUS
+        ================================================== -->
+
+        <div class="today-status pending">
+
+
+            <span class="today-icon">
+
+                ○
+
+            </span>
+
+
+            <div>
+
+
+                <small>
+
+                    ATTENDANCE
+
+                </small>
+
+
+                <b>
+
+                    View Records
+
+                </b>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         STUDENT STATISTICS
+    ====================================================== -->
+
+    <section class="student-metrics">
+
+
+
+        <!-- Attendance Percentage -->
+
+        <article>
+
+
+            <span>
+
+                ▣
+
+            </span>
+
+
+            <div>
+
+
+                <small>
+
+                    Attendance Rate
+
+                </small>
+
+
+                <b>
+
+                    {{ '%.1f'|format(
+                        attendance_percentage|default(0)
+                    ) }}%
+
+                </b>
+
+
+            </div>
+
+
+        </article>
+
+
+
+        <!-- Present -->
+
+        <article>
+
+
+            <span class="metric-green">
+
+                ✓
+
+            </span>
+
+
+            <div>
+
+
+                <small>
+
+                    Days Present
+
+                </small>
+
+
+                <b>
+
+                    {{ present_days|default(0) }}
+
+                </b>
+
+
+            </div>
+
+
+        </article>
+
+
+
+        <!-- Absent -->
+
+        <article>
+
+
+            <span class="metric-red">
+
+                −
+
+            </span>
+
+
+            <div>
+
+
+                <small>
+
+                    Days Absent
+
+                </small>
+
+
+                <b>
+
+                    {{ absent_days|default(0) }}
+
+                </b>
+
+
+            </div>
+
+
+        </article>
+
+
+
+        <!-- Total -->
+
+        <article>
+
+
+            <span class="metric-blue">
+
+                ▤
+
+            </span>
+
+
+            <div>
+
+
+                <small>
+
+                    Total Records
+
+                </small>
+
+
+                <b>
+
+                    {{ total_days|default(0) }}
+
+                </b>
+
+
+            </div>
+
+
+        </article>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         CONTENT GRID
+    ====================================================== -->
+
+    <section class="student-content-grid">
+
+
+
+        <!-- =================================================
+             ATTENDANCE OVERVIEW
+        ================================================== -->
+
+        <article class="attendance-overview">
+
+
+            <div class="section-header">
+
+
+                <div>
+
+
+                    <p class="eyebrow">
+
+                        PERFORMANCE
+
+                    </p>
+
+
+                    <h2>
+
+                        Attendance Overview
+
+                    </h2>
+
+
+                </div>
+
+
+                <span class="trend-pill">
+
+
+                    {{ present_days|default(0) }}
+
+                    present days
+
+
+                </span>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PROGRESS AREA
+            ================================================== -->
+
+            <div class="progress-area">
+
+
+
+                <!-- Attendance Ring -->
+
+                <div class="attendance-ring"
+                     style="--attendance: {{ attendance_percentage|default(0) }}%;">
+
+
+                    <div>
+
+
+                        <strong>
+
+                            {{ '%.0f'|format(
+                                attendance_percentage|default(0)
+                            ) }}%
+
+                        </strong>
+
+
+                        <small>
+
+                            attendance
+
+                        </small>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- Progress Information -->
+
+                <div class="progress-copy">
+
+
+                    <h3>
+
+
+                        {% if attendance_percentage|default(0) >= 75 %}
+
+
+                            Attendance is above 75%
+
+
+                        {% elif total_days|default(0) > 0 %}
+
+
+                            Attendance is below 75%
+
+
+                        {% else %}
+
+
+                            No attendance data yet
+
+
+                        {% endif %}
+
+
+                    </h3>
+
+
+
+                    <p>
+
+
+                        Attendance is calculated from
+
+
+                        {{ total_days|default(0) }}
+
+
+                        recorded class days.
+
+
+                    </p>
+
+
+
+                    <!-- Progress Bar -->
+<div class="progress-track">
+
+    <span
+        class="progress-fill"
+        data-percentage="{{ attendance_percentage|default(0) }}">
+    </span>
+
+</div>
+                    <!-- Progress Labels -->
+
+                    <div class="progress-labels">
+
+
+                        <span>
+
+                            0%
+
+                        </span>
+
+
+                        <b>
+
+                            Target: 75%
+
+                        </b>
+
+
+                        <span>
+
+                            100%
+
+                        </span>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </article>
+
+
+
+        <!-- =================================================
+             QUICK ATTENDANCE
+        ================================================== -->
+
+        <aside class="checkin-card">
+
+
+            <p class="eyebrow">
+
+                ATTENDANCE
+
+            </p>
+
+
+            <h2>
+
+                Mark Attendance
+
+            </h2>
+
+
+            <p>
+
+                Choose the attendance method.
+                Face recognition and QR scanning
+                will be connected here in the next step.
+
+            </p>
+
+
+
+            <!-- Manual -->
+
+            <a class="checkin-option"
+               href="{{ url_for('attendance') }}">
+
+
+                <span>
+
+                    ✓
+
+                </span>
+
+
+                <div>
+
+
+                    <b>
+
+                        Manual Attendance
+
+                    </b>
+
+
+                    <small>
+
+                        Mark attendance manually
+
+                    </small>
+
+
+                </div>
+
+
+                <i>
+
+                    →
+
+                </i>
+
+
+            </a>
+
+
+
+            <!-- Face -->
+
+            <a class="checkin-option"
+               href="{{ url_for('attendance') }}">
+
+
+                <span>
+
+                    ◉
+
+                </span>
+
+
+                <div>
+
+
+                    <b>
+
+                        Face Recognition
+
+                    </b>
+
+
+                    <small>
+
+                        Camera-based attendance
+
+                    </small>
+
+
+                </div>
+
+
+                <i>
+
+                    →
+
+                </i>
+
+
+            </a>
+
+
+
+            <!-- QR -->
+
+            <a class="checkin-option"
+               href="{{ url_for('attendance') }}">
+
+
+                <span>
+
+                    ▣
+
+                </span>
+
+
+                <div>
+
+
+                    <b>
+
+                        Scan QR Code
+
+                    </b>
+
+
+                    <small>
+
+                        QR-based attendance
+
+                    </small>
+
+
+                </div>
+
+
+                <i>
+
+                    →
+
+                </i>
+
+
+            </a>
+
+
+        </aside>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ATTENDANCE HISTORY
+    ====================================================== -->
+
+    <section class="student-records">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+
+                <p class="eyebrow">
+
+                    HISTORY
+
+                </p>
+
+
+                <h2>
+
+                    Attendance Records
+
+                </h2>
+
+
+            </div>
+
+
+            <span class="record-count">
+
+
+                {{ total_days|default(0) }}
+
+                entries
+
+
+            </span>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE
+        ================================================== -->
+
+        <div class="table-wrapper">
+
+
+            <table>
+
+
+                <thead>
+
+
+                    <tr>
+
+
+                        <th>
+
+                            Date
+
+                        </th>
+
+
+                        <th>
+
+                            Status
+
+                        </th>
+
+
+                    </tr>
+
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                    {% for record in records %}
+
+
+                    <tr>
+
+
+                        <td>
+
+                            {{ record['date'] }}
+
+                        </td>
+
+
+                        <td>
+
+
+                            {% if record['status'] == 'Present' %}
+
+
+                                <span class="status-present">
+
+                                    Present
+
+                                </span>
+
+
+                            {% else %}
+
+
+                                <span class="status-absent">
+
+                                    Absent
+
+                                </span>
+
+
+                            {% endif %}
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% else %}
+
+
+                    <tr>
+
+
+                        <td colspan="2"
+                            class="empty-message">
+
+
+                            No attendance records
+                            available yet.
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+
+
+</main>
+
+
+<script>
+
+    const progressFill =
+        document.querySelector(".progress-fill");
+
+
+    if (progressFill) {
+
+
+        const percentage =
+            parseFloat(
+                progressFill.dataset.percentage
+            ) || 0;
+
+
+        progressFill.style.width =
+            percentage + "%";
+
+
+    }
+
+</script>
+
+
+</body>
+
+</html>
+```

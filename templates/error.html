@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Error - Smart Attendance</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <div class="error-page">
+
+        <h1>{{ error_code }}</h1>
+
+        <h2>{{ message }}</h2>
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="button"
+        >
+            Back to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

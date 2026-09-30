@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Attendance | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="scanner-body">
+<main class="scanner-shell">
+    <a href="{{ url_for('dashboard') if current_user.role == 'faculty' else url_for('my_attendance') }}" class="back-link">← Back to dashboard</a>
+    <section class="scanner-card">
+        <p class="eyebrow">CAMERA CHECK-IN</p><h1>Mark attendance</h1><p class="scanner-intro">Choose face recognition or QR code, then keep the student inside the camera frame.</p>
+        <div class="scan-tabs"><button class="tab active" data-mode="face">◉ Face recognition</button><button class="tab" id="qr" data-mode="qr">▣ Scan QR code</button></div>
+        <div class="camera-wrap"><video id="camera" autoplay playsinline muted></video><div class="camera-overlay"><span id="frameIcon">⌑</span><p id="cameraStatus">Starting camera…</p></div></div>
+        <p class="camera-note" id="modeHelp">Make sure the face is bright, centered, and looking at the camera.</p>
+        <div class="scan-controls">
+            <button id="scanButton" class="scan-button" disabled>Scan face & mark attendance</button>
+            <button id="switchCamera" class="switch-button" type="button" title="Switch front / back camera">⇄ <span id="camLabel">Front camera</span></button>
+        </div>
+        <div id="result" class="scan-result" aria-live="polite"></div>
+    </section>
+</main>
+<canvas id="capture" hidden></canvas>
+<script>
+const video=document.getElementById('camera'), canvas=document.getElementById('capture'), scanButton=document.getElementById('scanButton');
+const switchButton=document.getElementById('switchCamera'), camLabel=document.getElementById('camLabel');
+const result=document.getElementById('result'), statusText=document.getElementById('cameraStatus'), modeHelp=document.getElementById('modeHelp'), frameIcon=document.getElementById('frameIcon');
+let mode='face';
+let facingMode='user';
+let stream=null;
+function showResult(ok,message,name,time){result.className='scan-result '+(ok?'success':'failure');result.replaceChildren();const heading=document.createElement('strong');heading.textContent=ok?'✓ '+message:'! '+message;result.append(heading);if(name){const detail=document.createElement('span');detail.textContent=name+(time?' · '+time:'');result.append(detail)}}
+function stopStream(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+async function startCamera(){
+  stopStream();
+  scanButton.disabled=true;
+  statusText.textContent='Starting '+ (facingMode==='user'?'front':'back') +' camera…';
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facingMode},width:{ideal:960,max:1280},height:{ideal:720,max:960}},audio:false});
+    video.srcObject=stream;
+    video.style.transform=facingMode==='user'?'scaleX(-1)':'none';
+    await video.play();
+    statusText.textContent='Camera ready ('+(facingMode==='user'?'front':'back')+')';
+    camLabel.textContent=facingMode==='user'?'Front camera':'Back camera';
+    scanButton.disabled=false;
+  }catch(error){
+    statusText.textContent='Camera access is needed';
+    showResult(false,'Allow camera access in your browser (use localhost or HTTPS), then reload this page.');
+  }
+}
+switchButton.addEventListener('click',async()=>{facingMode=facingMode==='user'?'environment':'user';await startCamera();});
+function captureImage(){const maxSide=960;const sourceWidth=video.videoWidth,sourceHeight=video.videoHeight;if(!sourceWidth)return null;const scale=Math.min(1,maxSide/Math.max(sourceWidth,sourceHeight));canvas.width=Math.max(1,Math.round(sourceWidth*scale));canvas.height=Math.max(1,Math.round(sourceHeight*scale));const ctx=canvas.getContext('2d');if(facingMode!=='user'){ctx.drawImage(video,0,0,canvas.width,canvas.height);}else{ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.setTransform(1,0,0,1,0,0);}return canvas.toDataURL('image/jpeg',.78)}
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(item=>item.classList.remove('active'));tab.classList.add('active');mode=tab.dataset.mode;const isFace=mode==='face';scanButton.textContent=isFace?'Scan face & mark attendance':'Scan QR & mark attendance';modeHelp.textContent=isFace?'Make sure the face is bright, centered, and looking at the camera.':'Hold the QR code close and steady. It must contain the student registration number (e.g. show My QR on the student page).';frameIcon.textContent=isFace?'⌑':'▣';result.className='scan-result';result.textContent=''}));
+scanButton.addEventListener('click',async()=>{if(!video.videoWidth)return;const shot=captureImage();if(!shot){showResult(false,'Camera is not ready yet. Wait a second and try again.');return;}scanButton.disabled=true;statusText.textContent='Scanning…';result.className='scan-result';try{const response=await fetch(mode==='face'?'{{ url_for("scan_face_api") }}':'{{ url_for("scan_qr_api") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:shot})});const contentType=response.headers.get('content-type')||'';const data=contentType.includes('application/json')?await response.json():{success:false,message:response.status===413?'Camera image was too large. Please try again.':'The scanner returned an unexpected server response ('+response.status+').'};showResult(Boolean(data.success),data.message,data.name,data.time);statusText.textContent=data.success?'Attendance updated':'Try again'}catch(error){showResult(false,'Could not reach the attendance server. Confirm that Flask is running, then try again.');statusText.textContent='Connection problem'}finally{scanButton.disabled=false}});
+startCamera();
+if(location.hash==='#qr')document.getElementById('qr').click();
+</script>
+</body></html>

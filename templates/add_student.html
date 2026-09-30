@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enroll Student | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="dashboard">
+    <div class="topbar">
+        <div><p class="eyebrow">STUDENT MANAGEMENT</p><h1>Enroll a student</h1></div>
+        <a href="{{ url_for('dashboard') }}" class="button secondary">Back to dashboard</a>
+    </div>
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="active" href="{{ url_for('add_student') }}">Enroll student</a>
+        <a href="{{ url_for('students') }}">Students</a>
+        <a href="{{ url_for('attendance') }}">Manual attendance</a>
+        <a href="{{ url_for('attendance_records') }}">Records</a>
+        <a href="{{ url_for('monthly_report') }}">Monthly report</a>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <section class="enroll-layout">
+        <form method="post" enctype="multipart/form-data" class="form-container enrollment-form">
+            <p class="eyebrow">NEW STUDENT</p><h2>Student details</h2><p class="form-note">A clear face photo is used only for face-recognition attendance.</p>
+            <div class="form-group"><label for="name">Full name</label><input id="name" type="text" name="name" value="{{ name }}" required maxlength="100" placeholder="Enter full name" autocomplete="name"></div>
+            <div class="form-group"><label for="register_no">Registration number</label><input id="register_no" type="text" name="register_no" value="{{ register_no }}" required maxlength="50" placeholder="For example: 1DI24CS001" autocomplete="off"></div>
+            <div class="form-group"><label for="face_image">Face photo</label><input id="face_image" type="file" name="face_image" accept="image/jpeg,image/png,image/webp" required><small class="input-help">JPG, PNG, or WEBP · maximum 5 MB · use a front-facing, well-lit photo.</small></div>
+            <button type="submit" class="save-btn">Enroll student</button>
+        </form>
+        <aside class="enroll-note"><span class="enroll-note-icon">01</span><h2>Before you enroll</h2><ol><li>Use the student's unique registration number.</li><li>Choose a clear image with one visible face.</li><li>The student can then create a Student account using that registration number.</li></ol><a href="{{ url_for('students') }}">View enrolled students →</a></aside>
+    </section>
+</main>
+</body>
+</html>

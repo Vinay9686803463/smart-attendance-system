@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Records</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <h1>Attendance Records</h1>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+        <a href="{{ url_for('add_student') }}">Add Student</a>
+
+        <a href="{{ url_for('students') }}">Students</a>
+
+        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
+
+        <a href="{{ url_for('attendance_records') }}">
+            Records
+        </a>
+
+        <a href="{{ url_for('monthly_report') }}">
+            Monthly Report
+        </a>
+
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="filter-card">
+
+        <form method="GET" class="filter-form">
+
+            <div>
+
+                <label>Date</label>
+
+                <input
+                    type="date"
+                    name="date"
+                    value="{{ selected_date }}"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label>Status</label>
+
+                <select name="status">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option
+                        value="Present"
+                        {% if selected_status == "Present" %}
+                        selected
+                        {% endif %}
+                    >
+                        Present
+                    </option>
+
+                    <option
+                        value="Absent"
+                        {% if selected_status == "Absent" %}
+                        selected
+                        {% endif %}
+                    >
+                        Absent
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label>Student</label>
+
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Name / Register No."
+                >
+
+            </div>
+
+
+            <div class="filter-buttons">
+
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Apply Filter
+                </button>
+
+                <a
+                    href="{{ url_for('attendance_records') }}"
+                    class="button secondary"
+                >
+                    Clear
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <div class="table-card">
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Registration No.</th>
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for record in records %}
+
+                    <tr>
+
+                        <td>
+                            {{ record["date"] }}
+                        </td>
+
+                        <td>
+                            {{ record["name"] }}
+                        </td>
+
+                        <td>
+                            {{ record["register_no"] }}
+                        </td>
+
+                        <td>
+
+                            {% if record["status"] == "Present" %}
+
+                            <span class="status-present">
+                                Present
+                            </span>
+
+                            {% else %}
+
+                            <span class="status-absent">
+                                Absent
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="4"
+                            class="empty-message"
+                        >
+                            No attendance records found.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Student</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <h1>Edit Student</h1>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+        <a href="{{ url_for('add_student') }}">Add Student</a>
+
+        <a href="{{ url_for('students') }}">Students</a>
+
+        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
+
+        <a href="{{ url_for('attendance_records') }}">
+            Records
+        </a>
+
+        <a href="{{ url_for('monthly_report') }}">
+            Monthly Report
+        </a>
+
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="form-container">
+
+        {% if error %}
+
+        <div class="error-message">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        <form method="POST">
+
+            <div class="form-group">
+
+                <label for="name">
+                    Student Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ student['name'] }}"
+                    required
+                    maxlength="100"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="register_no">
+                    Registration Number
+                </label>
+
+                <input
+                    type="text"
+                    id="register_no"
+                    name="register_no"
+                    value="{{ student['register_no'] }}"
+                    required
+                    maxlength="50"
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="save-btn"
+            >
+                Update Student
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
