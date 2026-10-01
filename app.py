@@ -87,6 +87,24 @@ def init_db():
     """)
     add_column_if_missing(connection, "users", "email", "TEXT")
     connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL")
+    # Seed a default faculty account on a FRESH database (e.g. Vercel's
+    # ephemeral /tmp SQLite, which starts empty on every cold instance).
+    # Without this, nobody can sign in on a fresh deploy. Override via
+    # ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL env vars.
+    user_count = connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    if user_count == 0:
+        admin_user = os.environ.get("ADMIN_USERNAME", "admin").strip() or "admin"
+        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
+        admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com").strip().lower() or None
+        try:
+            connection.execute(
+                "INSERT INTO users (name, username, email, password_hash, role, student_id, created_at) VALUES (?, ?, ?, ?, 'faculty', NULL, ?)",
+                ("Administrator", admin_user, admin_email, generate_password_hash(admin_pass),
+                 datetime.now().isoformat(timespec="seconds")),
+            )
+            app.logger.warning("Seeded default faculty account '%s' (change its password after first sign-in).", admin_user)
+        except sqlite3.IntegrityError:
+            pass
     connection.execute("""
         CREATE TABLE IF NOT EXISTS password_reset_otps (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
