@@ -433,6 +433,70 @@ def login():
     return render_template("login.html")
 
 
+def _login_student_user(student):
+    """Start a student session for face/QR sign-in. Returns (ok, message)."""
+    connection = get_db()
+    user = connection.execute(
+        "SELECT * FROM users WHERE student_id = ? AND role = 'student'", (student["id"],)
+    ).fetchone()
+    connection.close()
+    if user is None:
+        return False, "No sign-in account is linked to this face/QR yet. Create a student account first."
+    session.clear()
+    session.permanent = True
+    session.update(user_id=user["id"], user_name=user["name"], role=user["role"], student_id=user["student_id"])
+    return True, f"Welcome back, {user['name']}!"
+
+
+@app.route("/login-face", methods=["POST"])
+def login_face():
+    """Password-less student sign-in via face recognition (used on the login page)."""
+    try:
+        if current_user():
+            return jsonify(success=True, redirect=url_for("home"))
+        image = decode_camera_image((request.get_json(silent=True) or {}).get("image"))
+        if image is None:
+            return jsonify(success=False, message="Camera image was not received. Allow camera access and try again."), 400
+        student, error = recognise_face(image)
+        if error:
+            return jsonify(success=False, message=error), 422
+        ok, message = _login_student_user(student)
+        if not ok:
+            return jsonify(success=False, message=message), 404
+        return jsonify(success=True, message=message, redirect=url_for("my_attendance"))
+    except Exception:
+        app.logger.exception("login-face crashed")
+        return jsonify(success=False, message="Face sign-in hit a server error. Please try again."), 500
+
+
+@app.route("/login-qr", methods=["POST"])
+def login_qr():
+    """Password-less student sign-in via QR code (used on the login page)."""
+    try:
+        if current_user():
+            return jsonify(success=True, redirect=url_for("home"))
+        image = decode_camera_image((request.get_json(silent=True) or {}).get("image"))
+        if image is None:
+            return jsonify(success=False, message="Camera image was not received. Allow camera access and try again."), 400
+        registration = decode_qr_value(image).strip().upper()
+        if not registration:
+            return jsonify(success=False, message="No QR code found. Hold it inside the frame and try again."), 422
+        connection = get_db()
+        student = connection.execute(
+            "SELECT id, name, register_no FROM students WHERE register_no = ?", (registration,)
+        ).fetchone()
+        connection.close()
+        if student is None:
+            return jsonify(success=False, message="This QR code is not linked to a student."), 404
+        ok, message = _login_student_user(student)
+        if not ok:
+            return jsonify(success=False, message=message), 404
+        return jsonify(success=True, message=message, redirect=url_for("my_attendance"))
+    except Exception:
+        app.logger.exception("login-qr crashed")
+        return jsonify(success=False, message="QR sign-in hit a server error. Please try again."), 500
+
+
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
     if current_user():

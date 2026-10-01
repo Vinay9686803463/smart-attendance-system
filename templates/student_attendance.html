@@ -1,6 +1,4 @@
-```html
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -32,15 +30,17 @@
 
     <header class="student-topbar">
 
-
+        {% if faculty_view|default(False) %}
         <a href="{{ url_for('dashboard') }}"
            class="student-brand">
-
+        {% else %}
+        <a href="{{ url_for('my_attendance') }}"
+           class="student-brand">
+        {% endif %}
 
             <span class="brand-mark">
                 S
             </span>
-
 
             <span>
 
@@ -49,28 +49,21 @@
                 </b>
 
                 <small>
-                    Student Profile
+                    {% if faculty_view|default(False) %}Student profile - Faculty view{% else %}My attendance{% endif %}
                 </small>
 
             </span>
 
-
         </a>
-
 
 
         <div class="student-user">
 
-
             <span class="student-avatar">
-
-                {{ student['name'][0]|upper }}
-
+                {{ ((student['name'] or '?')|trim|first or '?')|upper }}
             </span>
 
-
             <span>
-
                 <b>
                     {{ student['name'] }}
                 </b>
@@ -78,20 +71,21 @@
                 <small>
                     {{ student['register_no'] }}
                 </small>
-
             </span>
 
-
-            <a href="{{ url_for('students') }}"
-               class="button secondary small">
-
-                All Students
-
-            </a>
-
+            {% if faculty_view|default(False) %}
+                <a href="{{ url_for('students') }}"
+                   class="button secondary small">
+                    All Students
+                </a>
+            {% else %}
+                <a href="{{ url_for('logout') }}"
+                   class="button secondary small">
+                    Sign out
+                </a>
+            {% endif %}
 
         </div>
-
 
     </header>
 
@@ -103,47 +97,93 @@
 
     <nav class="student-nav">
 
+        {% if faculty_view|default(False) %}
 
-        <a class="active"
-           href="{{ url_for(
-               'student_attendance',
-               student_id=student['id']
-           ) }}">
+            <a class="active"
+               href="{{ url_for(
+                   'student_attendance',
+                   student_id=student['id']
+               ) }}">
 
-            Overview
+                Overview
 
-        </a>
-
-
-        <a href="{{ url_for('attendance') }}">
-
-            Face Attendance
-
-        </a>
+            </a>
 
 
-        <a href="{{ url_for('attendance') }}">
+            <a href="{{ url_for('scan_face') }}">
 
-            Scan QR
+                Face Login
 
-        </a>
-
-
-        <a href="{{ url_for('students') }}">
-
-            All Students
-
-        </a>
+            </a>
 
 
-        <a href="{{ url_for('attendance_records') }}">
+            <a href="{{ url_for('scan_face') }}#qr">
 
-            Records
+                Scan QR
 
-        </a>
+            </a>
 
+
+            <a href="{{ url_for('students') }}">
+
+                All Students
+
+            </a>
+
+
+            <a href="{{ url_for('attendance') }}">
+
+                Mark Attendance
+
+            </a>
+
+
+            <a href="{{ url_for('attendance_records') }}">
+
+                Attendance Records
+
+            </a>
+
+        {% else %}
+
+            <a class="active"
+               href="{{ url_for('my_attendance') }}">
+
+                Overview
+
+            </a>
+
+
+            <a href="{{ url_for('scan_face') }}">
+
+                Face Login
+
+            </a>
+
+
+            <a href="{{ url_for('scan_face') }}#qr">
+
+                Scan QR
+
+            </a>
+
+
+            <a href="{{ url_for('my_face') }}">
+
+                Face Photo
+
+            </a>
+
+        {% endif %}
 
     </nav>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
 
 
 
@@ -156,117 +196,115 @@
 
         <div>
 
-
             <p class="eyebrow">
-
                 STUDENT ATTENDANCE PROFILE
-
             </p>
 
 
             <h1>
-
                 {{ student['name'] }}
-
             </h1>
 
 
             <p>
-
                 Registration Number:
-
                 <strong>
-
                     {{ student['register_no'] }}
-
                 </strong>
-
             </p>
 
 
-            {% if total_days > 0 %}
-
+            {% if today_status|default(None) == 'Present' %}
 
                 <p>
-
-                    Attendance information for this
-                    student is shown below.
-
+                    This student is marked present today.
                 </p>
 
+            {% elif today_status|default(None) == 'Absent' %}
+
+                <p>
+                    This student is marked absent today.
+                </p>
 
             {% else %}
 
-
                 <p>
-
-                    No attendance has been recorded
-                    for this student yet.
-
+                    There is no attendance record
+                    for this student today.
                 </p>
-
 
             {% endif %}
 
 
-
-            <a href="{{ url_for('attendance') }}"
-               class="student-primary">
-
-
-                Mark Attendance
-
-
-                <span>
-
-                    →
-
-                </span>
-
-
-            </a>
-
+            {% if not faculty_view|default(False) %}
+                <a href="{{ url_for('scan_face') }}" class="student-primary">
+                    ✓ Check in now
+                    <span>
+                        →
+                    </span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('attendance') }}" class="student-primary">
+                    ✓ Mark Attendance
+                    <span>
+                        →
+                    </span>
+                </a>
+            {% endif %}
 
         </div>
 
 
 
-        <!-- =================================================
-             STATUS
-        ================================================== -->
+        <!-- TODAY STATUS -->
 
-        <div class="today-status pending">
+        <div class="today-status
+                    {{ (today_status|default('pending'))|lower }}">
 
 
             <span class="today-icon">
 
-                ○
+                {% if today_status|default(None) == 'Present' %}
+
+                    ✓
+
+                {% elif today_status|default(None) == 'Absent' %}
+
+                    !
+
+                {% else %}
+
+                    ○
+
+                {% endif %}
 
             </span>
 
 
             <div>
 
-
                 <small>
-
-                    ATTENDANCE
-
+                    TODAY · {{ today|default('') }}
                 </small>
 
 
                 <b>
 
-                    View Records
+                    {% if today_status|default(None) %}
+
+                        {{ today_status }}
+
+                    {% else %}
+
+                        Not marked
+
+                    {% endif %}
 
                 </b>
 
-
             </div>
 
-
         </div>
-
 
     </section>
 
@@ -279,150 +317,102 @@
     <section class="student-metrics">
 
 
-
         <!-- Attendance Percentage -->
 
         <article>
 
-
             <span>
-
                 ▣
-
             </span>
-
 
             <div>
 
-
                 <small>
-
-                    Attendance Rate
-
+                    Attendance rate
                 </small>
 
-
                 <b>
-
                     {{ '%.1f'|format(
                         attendance_percentage|default(0)
                     ) }}%
-
                 </b>
 
-
             </div>
-
 
         </article>
 
 
 
-        <!-- Present -->
+        <!-- Present Days -->
 
         <article>
-
 
             <span class="metric-green">
-
                 ✓
-
             </span>
-
 
             <div>
 
-
                 <small>
-
-                    Days Present
-
+                    Days present
                 </small>
 
-
                 <b>
-
                     {{ present_days|default(0) }}
-
                 </b>
 
-
             </div>
-
 
         </article>
 
 
 
-        <!-- Absent -->
+        <!-- Absent Days -->
 
         <article>
-
 
             <span class="metric-red">
-
                 −
-
             </span>
-
 
             <div>
 
-
                 <small>
-
-                    Days Absent
-
+                    Days absent
                 </small>
 
-
                 <b>
-
                     {{ absent_days|default(0) }}
-
                 </b>
 
-
             </div>
-
 
         </article>
 
 
 
-        <!-- Total -->
+        <!-- Total Records -->
 
         <article>
 
-
             <span class="metric-blue">
-
                 ▤
-
             </span>
-
 
             <div>
 
-
                 <small>
-
-                    Total Records
-
+                    Total records
                 </small>
 
-
                 <b>
-
                     {{ total_days|default(0) }}
-
                 </b>
-
 
             </div>
 
-
         </article>
+
 
 
     </section>
@@ -430,93 +420,68 @@
 
 
     <!-- =====================================================
-         CONTENT GRID
+         ATTENDANCE OVERVIEW
     ====================================================== -->
 
     <section class="student-content-grid">
 
-
-
-        <!-- =================================================
-             ATTENDANCE OVERVIEW
-        ================================================== -->
 
         <article class="attendance-overview">
 
 
             <div class="section-header">
 
-
                 <div>
 
-
                     <p class="eyebrow">
-
                         PERFORMANCE
-
                     </p>
 
-
                     <h2>
-
-                        Attendance Overview
-
+                        Attendance overview
                     </h2>
-
 
                 </div>
 
 
                 <span class="trend-pill">
 
-
                     {{ present_days|default(0) }}
-
                     present days
 
-
                 </span>
-
 
             </div>
 
 
 
-            <!-- =================================================
-                 PROGRESS AREA
-            ================================================== -->
+            <!-- PROGRESS AREA -->
 
             <div class="progress-area">
-
 
 
                 <!-- Attendance Ring -->
 
                 <div class="attendance-ring"
-                     style="--attendance: {{ attendance_percentage|default(0) }}%;">
+                     style="
+                         --attendance:
+                         {{ attendance_percentage|default(0) }}%;
+                     ">
 
 
                     <div>
 
-
                         <strong>
-
                             {{ '%.0f'|format(
                                 attendance_percentage|default(0)
                             ) }}%
-
                         </strong>
 
-
                         <small>
-
                             attendance
-
                         </small>
 
-
                     </div>
-
 
                 </div>
 
@@ -529,257 +494,119 @@
 
                     <h3>
 
+                        {% if (attendance_percentage|default(0)) >= 75 %}
 
-                        {% if attendance_percentage|default(0) >= 75 %}
-
-
-                            Attendance is above 75%
-
-
-                        {% elif total_days|default(0) > 0 %}
-
-
-                            Attendance is below 75%
-
+                            You're on track
 
                         {% else %}
 
-
-                            No attendance data yet
-
+                            Build your attendance
 
                         {% endif %}
-
 
                     </h3>
 
 
-
                     <p>
 
-
                         Attendance is calculated from
-
-
-                        {{ total_days|default(0) }}
-
-
+                        all {{ total_days|default(0) }}
                         recorded class days.
-
 
                     </p>
 
 
-
                     <!-- Progress Bar -->
-<div class="progress-track">
 
-    <span
-        class="progress-fill"
-        data-percentage="{{ attendance_percentage|default(0) }}">
-    </span>
+                    <div class="progress-track">
 
-</div>
-                    <!-- Progress Labels -->
-
-                    <div class="progress-labels">
-
-
-                        <span>
-
-                            0%
-
+                        <span
+                            style="
+                                width:
+                                {{ attendance_percentage|default(0) }}%;
+                            ">
                         </span>
-
-
-                        <b>
-
-                            Target: 75%
-
-                        </b>
-
-
-                        <span>
-
-                            100%
-
-                        </span>
-
 
                     </div>
 
 
+                    <div class="progress-labels">
+
+                        <span>
+                            0%
+                        </span>
+
+                        <b>
+                            Target: 75%
+                        </b>
+
+                        <span>
+                            100%
+                        </span>
+
+                    </div>
+
                 </div>
 
-
             </div>
-
 
         </article>
 
 
-
-        <!-- =================================================
-             QUICK ATTENDANCE
-        ================================================== -->
-
         <aside class="checkin-card">
 
-
             <p class="eyebrow">
-
-                ATTENDANCE
-
+                MARK YOUR ATTENDANCE
             </p>
-
 
             <h2>
-
-                Mark Attendance
-
+                Check in today
             </h2>
 
-
             <p>
-
-                Choose the attendance method.
-                Face recognition and QR scanning
-                will be connected here in the next step.
-
+                {% if faculty_view|default(False) %}
+                    Verify this student with the camera, or scan
+                    their QR code to mark attendance.
+                {% else %}
+                    Use your face or your QR code to mark
+                    today's attendance in a second.
+                {% endif %}
             </p>
 
-
-
-            <!-- Manual -->
-
-            <a class="checkin-option"
-               href="{{ url_for('attendance') }}">
-
-
-                <span>
-
-                    ✓
-
-                </span>
-
-
+            <a class="checkin-option" href="{{ url_for('scan_face') }}">
+                <span>◉</span>
                 <div>
-
-
-                    <b>
-
-                        Manual Attendance
-
-                    </b>
-
-
-                    <small>
-
-                        Mark attendance manually
-
-                    </small>
-
-
+                    <b>Face Login</b>
+                    <small>Look at the camera to be recognized</small>
                 </div>
-
-
-                <i>
-
-                    →
-
-                </i>
-
-
+                <i>→</i>
             </a>
 
-
-
-            <!-- Face -->
-
-            <a class="checkin-option"
-               href="{{ url_for('attendance') }}">
-
-
-                <span>
-
-                    ◉
-
-                </span>
-
-
+            <a class="checkin-option" href="{{ url_for('scan_face') }}#qr">
+                <span>▣</span>
                 <div>
-
-
-                    <b>
-
-                        Face Recognition
-
-                    </b>
-
-
-                    <small>
-
-                        Camera-based attendance
-
-                    </small>
-
-
+                    <b>Scan QR code</b>
+                    <small>Point the camera at the QR code</small>
                 </div>
-
-
-                <i>
-
-                    →
-
-                </i>
-
-
+                <i>→</i>
             </a>
 
-
-
-            <!-- QR -->
-
-            <a class="checkin-option"
-               href="{{ url_for('attendance') }}">
-
-
-                <span>
-
-                    ▣
-
-                </span>
-
-
+            {% if not faculty_view|default(False) %}
+            <a class="checkin-option" href="{{ url_for('my_face') }}">
+                <span>☺</span>
                 <div>
-
-
-                    <b>
-
-                        Scan QR Code
-
-                    </b>
-
-
-                    <small>
-
-                        QR-based attendance
-
-                    </small>
-
-
+                    <b>My face photo</b>
+                    <small>No photo yet? Add one for Face Login</small>
                 </div>
-
-
-                <i>
-
-                    →
-
-                </i>
-
-
+                <i>→</i>
             </a>
+            {% endif %}
 
+            <div class="my-qr">
+                <div id="myQr"
+                     data-register-no="{{ student['register_no'] }}"></div>
+                <small>My QR = {{ student['register_no'] }}. Show this to the faculty camera for QR check-in.</small>
+            </div>
 
         </aside>
 
@@ -789,7 +616,7 @@
 
 
     <!-- =====================================================
-         ATTENDANCE HISTORY
+          ATTENDANCE HISTORY
     ====================================================== -->
 
     <section class="student-records">
@@ -800,42 +627,29 @@
 
             <div>
 
-
                 <p class="eyebrow">
-
                     HISTORY
-
                 </p>
 
-
                 <h2>
-
-                    Attendance Records
-
+                    Attendance records
                 </h2>
-
 
             </div>
 
 
             <span class="record-count">
 
-
                 {{ total_days|default(0) }}
-
                 entries
 
-
             </span>
-
 
         </div>
 
 
 
-        <!-- =================================================
-             TABLE
-        ================================================== -->
+        <!-- TABLE -->
 
         <div class="table-wrapper">
 
@@ -845,26 +659,21 @@
 
                 <thead>
 
-
                     <tr>
 
-
                         <th>
-
                             Date
-
                         </th>
-
 
                         <th>
-
-                            Status
-
+                            Method
                         </th>
 
+                        <th>
+                            Status
+                        </th>
 
                     </tr>
-
 
                 </thead>
 
@@ -873,11 +682,13 @@
                 <tbody>
 
 
-                    {% for record in records %}
+                    {% for record in records|default([]) %}
 
 
                     <tr>
 
+
+                        <!-- DATE -->
 
                         <td>
 
@@ -886,11 +697,25 @@
                         </td>
 
 
+
+                        <!-- METHOD -->
+
+                        <td>
+
+                            <span class="method">
+                                {{ record['method']|default('Manual') }}
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- STATUS -->
+
                         <td>
 
 
                             {% if record['status'] == 'Present' %}
-
 
                                 <span class="status-present">
 
@@ -898,16 +723,13 @@
 
                                 </span>
 
-
                             {% else %}
-
 
                                 <span class="status-absent">
 
                                     Absent
 
                                 </span>
-
 
                             {% endif %}
 
@@ -916,24 +738,18 @@
 
 
                     </tr>
-
-
                     {% else %}
 
 
                     <tr>
 
-
-                        <td colspan="2"
+                        <td colspan="3"
                             class="empty-message">
-
 
                             No attendance records
                             available yet.
 
-
                         </td>
-
 
                     </tr>
 
@@ -946,9 +762,7 @@
 
             </table>
 
-
         </div>
-
 
     </section>
 
@@ -957,31 +771,20 @@
 </main>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-
-    const progressFill =
-        document.querySelector(".progress-fill");
-
-
-    if (progressFill) {
-
-
-        const percentage =
-            parseFloat(
-                progressFill.dataset.percentage
-            ) || 0;
-
-
-        progressFill.style.width =
-            percentage + "%";
-
-
-    }
-
+try {
+  var el = document.getElementById('myQr');
+  var registerNo = el ? el.dataset.registerNo : '';
+  if (el && window.QRCode) {
+    new QRCode(el, { text: registerNo, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.M });
+  } else if (el) {
+    el.textContent = registerNo;
+  }
+} catch (e) { /* QR display is optional; scan still works with external QR */ }
 </script>
+<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script>
 
-
-<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script></body>
+</body>
 
 </html>
-```

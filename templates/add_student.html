@@ -28,7 +28,7 @@
             <p class="eyebrow">NEW STUDENT</p><h2>Student details</h2><p class="form-note">A clear face photo is used only for face-recognition attendance.</p>
             <div class="form-group"><label for="name">Full name</label><input id="name" type="text" name="name" value="{{ name }}" required maxlength="100" placeholder="Enter full name" autocomplete="name"></div>
             <div class="form-group"><label for="register_no">Registration number</label><input id="register_no" type="text" name="register_no" value="{{ register_no }}" required maxlength="50" placeholder="For example: 1DI24CS001" autocomplete="off"></div>
-            <div class="form-group"><label for="face_image">Face photo</label><input id="face_image" type="file" name="face_image" accept="image/jpeg,image/png,image/webp" required><small class="input-help">JPG, PNG, or WEBP · maximum 5 MB · use a front-facing, well-lit photo.</small></div>
+            <div class="form-group"><label for="face_image">Face photo (optional)</label><input id="face_image" type="file" name="face_image" accept="image/jpeg,image/png,image/webp"><small class="input-help">Optional · JPG, PNG, or WEBP · maximum 5 MB. The student can add it later from My Face Photo.</small></div>
             <button type="submit" class="save-btn">Enroll student</button>
         </form>
         <aside class="enroll-note"><span class="enroll-note-icon">01</span><h2>Before you enroll</h2><ol><li>Use the student's unique registration number.</li><li>Choose a clear image with one visible face.</li><li>The student can then create a Student account using that registration number.</li></ol><a href="{{ url_for('students') }}">View enrolled students →</a></aside>
