@@ -14,8 +14,16 @@ from email.message import EmailMessage
 from functools import wraps
 from pathlib import Path
 
-import cv2
-import numpy as np
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    cv2 = None
+    CV2_AVAILABLE = False
+try:
+    import numpy as np
+except ImportError:
+    np = None
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -155,6 +163,8 @@ def login_required(*roles):
 def save_face_image(upload, register_no):
     if not upload or not upload.filename:
         return None, "Please choose a face photo."
+    if not CV2_AVAILABLE or np is None:
+        return None, "Photo upload is unavailable on this server right now."
     if upload.mimetype not in {"image/jpeg", "image/png", "image/webp"}:
         return None, "Use a JPG, PNG, or WEBP image for the face photo."
     image = cv2.imdecode(np.frombuffer(upload.read(), np.uint8), cv2.IMREAD_COLOR)
@@ -212,6 +222,8 @@ def get_face_cascade():
     if _FACE_CASCADE_CHECKED:
         return _FACE_CASCADE
     _FACE_CASCADE_CHECKED = True
+    if not CV2_AVAILABLE:
+        return None
     candidates = [
         BASE_DIR / "static" / "haarcascade_frontalface_default.xml",
         Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml",
@@ -254,6 +266,8 @@ def crop_face(image):
 
 
 def decode_camera_image(payload):
+    if not CV2_AVAILABLE or np is None:
+        return None
     if not isinstance(payload, str) or "," not in payload:
         return None
     try:
@@ -264,8 +278,9 @@ def decode_camera_image(payload):
 
 
 def recognise_face(image):
-    if not hasattr(cv2, "face"):
-        return None, "Face recognition support is unavailable. Install opencv-contrib-python."
+    if not CV2_AVAILABLE or np is None or not hasattr(cv2, "face"):
+        return None, ("Face recognition is unavailable on this server. "
+                      "Redeploy with opencv-contrib-python installed.")
     try:
         camera_face = crop_face(image)
         if camera_face is None:
@@ -318,8 +333,10 @@ def mark_present(student_id, method):
 
 
 def may_mark(student):
+    """Only faculty may mark attendance - students can only register their
+    own face/QR, never mark (even their own) attendance."""
     user = current_user()
-    return user["role"] == "faculty" or user["student_id"] == student["id"]
+    return user is not None and user["role"] == "faculty"
 
 
 def hash_otp(otp):
@@ -969,15 +986,28 @@ def monthly_report():
         total_present=total_present, total_absent=total_absent, overall_percentage=(total_present / all_total * 100 if all_total else 0))
 
 
+@app.route("/health")
+def health():
+    """Public diagnostics - open /health on the live site to confirm the
+    server can do face recognition (needs opencv-contrib-python)."""
+    return jsonify(
+        ok=True,
+        cv2_available=CV2_AVAILABLE,
+        cv2_version=cv2.__version__ if CV2_AVAILABLE else None,
+        numpy_available=np is not None,
+        face_module=bool(CV2_AVAILABLE and hasattr(cv2, "face")),
+    )
+
+
 @app.route("/scan")
 @app.route("/scan-face")
-@login_required("student", "faculty")
+@login_required("faculty")
 def scan_face():
     return render_template("scan_face.html")
 
 
 @app.route("/scan-face", methods=["POST"])
-@login_required("student", "faculty")
+@login_required("faculty")
 def scan_face_api():
     try:
         image = decode_camera_image((request.get_json(silent=True) or {}).get("image"))
@@ -987,7 +1017,7 @@ def scan_face_api():
         if error:
             return jsonify(success=False, message=error), 422
         if not may_mark(student):
-            return jsonify(success=False, message="Student accounts can mark only their own attendance."), 403
+            return jsonify(success=False, message="Only faculty accounts can mark attendance."), 403
         repeated = mark_present(student["id"], "Face")
         return jsonify(success=True, message="Attendance already marked for today." if repeated else "Attendance marked successfully!", name=student["name"], time=datetime.now().strftime("%I:%M %p"))
     except Exception:
@@ -997,6 +1027,8 @@ def scan_face_api():
 
 def decode_qr_value(image):
     """Try plain + multi QR decode so tilted/small codes still read. Returns ''."""
+    if not CV2_AVAILABLE:
+        return ""
     try:
         detector = cv2.QRCodeDetector()
     except (cv2.error, AttributeError):
@@ -1019,7 +1051,7 @@ def decode_qr_value(image):
 
 
 @app.route("/scan-qr", methods=["POST"])
-@login_required("student", "faculty")
+@login_required("faculty")
 def scan_qr_api():
     try:
         image = decode_camera_image((request.get_json(silent=True) or {}).get("image"))
@@ -1039,7 +1071,7 @@ def scan_qr_api():
         if not student:
             return jsonify(success=False, message="This QR code is not linked to a student."), 404
         if not may_mark(student):
-            return jsonify(success=False, message="Student accounts can mark only their own attendance."), 403
+            return jsonify(success=False, message="Only faculty accounts can mark attendance."), 403
         repeated = mark_present(student["id"], "QR")
         return jsonify(success=True, message="Attendance already marked for today." if repeated else "Attendance marked successfully!", name=student["name"], time=datetime.now().strftime("%I:%M %p"))
     except Exception:

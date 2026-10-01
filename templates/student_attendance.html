@@ -154,23 +154,16 @@
             </a>
 
 
-            <a href="{{ url_for('scan_face') }}">
-
-                Face Login
-
-            </a>
-
-
-            <a href="{{ url_for('scan_face') }}#qr">
-
-                Scan QR
-
-            </a>
-
-
             <a href="{{ url_for('my_face') }}">
 
-                Face Photo
+                Add Face
+
+            </a>
+
+
+            <a href="#myQr">
+
+                My QR
 
             </a>
 
@@ -244,8 +237,8 @@
 
 
             {% if not faculty_view|default(False) %}
-                <a href="{{ url_for('scan_face') }}" class="student-primary">
-                    ✓ Check in now
+                <a href="{{ url_for('my_face') }}" class="student-primary">
+                    ☺ Add face photo
                     <span>
                         →
                     </span>
@@ -562,22 +555,18 @@
 
         <aside class="checkin-card">
 
+            {% if faculty_view|default(False) %}
             <p class="eyebrow">
-                MARK YOUR ATTENDANCE
+                MARK ATTENDANCE
             </p>
 
             <h2>
-                Check in today
+                Check in this student
             </h2>
 
             <p>
-                {% if faculty_view|default(False) %}
-                    Verify this student with the camera, or scan
-                    their QR code to mark attendance.
-                {% else %}
-                    Use your face or your QR code to mark
-                    today's attendance in a second.
-                {% endif %}
+                Verify this student with the camera, or scan
+                their QR code to mark attendance.
             </p>
 
             <a class="checkin-option" href="{{ url_for('scan_face') }}">
@@ -597,13 +586,25 @@
                 </div>
                 <i>→</i>
             </a>
+            {% else %}
+            <p class="eyebrow">
+                MY CHECK-IN IDS
+            </p>
 
-            {% if not faculty_view|default(False) %}
+            <h2>
+                Face &amp; QR setup
+            </h2>
+
+            <p>
+                Register your face and QR so faculty can mark
+                your attendance. Only faculty can mark attendance.
+            </p>
+
             <a class="checkin-option" href="{{ url_for('my_face') }}">
                 <span>☺</span>
                 <div>
-                    <b>My face photo</b>
-                    <small>No photo yet? Add one for Face Login</small>
+                    <b>Add face photo</b>
+                    <small>Upload a photo for face recognition</small>
                 </div>
                 <i>→</i>
             </a>

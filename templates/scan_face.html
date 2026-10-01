@@ -7,7 +7,7 @@
 </head>
 <body class="scanner-body">
 <main class="scanner-shell">
-    <a href="{{ url_for('dashboard') if current_user.role == 'faculty' else url_for('my_attendance') }}" class="back-link">← Back to dashboard</a>
+    <a href="{{ url_for('dashboard') }}" class="back-link">← Back to dashboard</a>
     <section class="scanner-card">
         <p class="eyebrow">CAMERA CHECK-IN</p><h1>Mark attendance</h1><p class="scanner-intro">Choose face recognition or QR code, then keep the student inside the camera frame.</p>
         <div class="scan-tabs"><button class="tab active" data-mode="face">◉ Face recognition</button><button class="tab" id="qr" data-mode="qr">▣ Scan QR code</button></div>
