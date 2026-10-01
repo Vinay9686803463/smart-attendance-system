@@ -81,6 +81,7 @@ def init_db():
             name TEXT NOT NULL,
             username TEXT UNIQUE NOT NULL,
             email TEXT,
+            phone TEXT,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL CHECK(role IN ('student', 'faculty')),
             student_id INTEGER UNIQUE,
@@ -89,6 +90,7 @@ def init_db():
         )
     """)
     add_column_if_missing(connection, "users", "email", "TEXT")
+    add_column_if_missing(connection, "users", "phone", "TEXT")
     connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL")
     # Seed a default faculty account on a FRESH database (e.g. Vercel's
     # ephemeral /tmp SQLite, which starts empty on every cold instance).
@@ -868,6 +870,73 @@ def my_face():
         flash("Your face photo was saved. You can now use Face Login.", "success")
         return redirect(url_for("my_attendance"))
     return render_template("my_face.html", student=student)
+
+
+@app.route("/my-settings", methods=["GET", "POST"])
+@login_required("student")
+def my_settings():
+    """Let a student change email, mobile number, and password (each validated)."""
+    user_id = current_user()["user_id"]
+    connection = get_db()
+    account = connection.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    connection.close()
+    if account is None:
+        session.clear()
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        form = request.form.get("form", "contact")
+        if form == "password":
+            current = request.form.get("current_password", "")
+            new = request.form.get("new_password", "")
+            confirm = request.form.get("confirm_password", "")
+            if not check_password_hash(account["password_hash"], current):
+                flash("Current password is incorrect.", "error")
+            elif len(new) < 6:
+                flash("Use a new password with at least 6 characters.", "error")
+            elif new != confirm:
+                flash("The new passwords do not match.", "error")
+            elif check_password_hash(account["password_hash"], new):
+                flash("The new password must be different from the current one.", "error")
+            else:
+                connection = get_db()
+                connection.execute(
+                    "UPDATE users SET password_hash = ? WHERE id = ?",
+                    (generate_password_hash(new), user_id),
+                )
+                connection.commit()
+                connection.close()
+                flash("Password changed. Please sign in again.", "success")
+                return redirect(url_for("logout"))
+            return render_template("my_settings.html", account=account)
+        email = request.form.get("email", "").strip().lower()
+        phone = re.sub(r"[\s\-()]", "", request.form.get("phone", "").strip())
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+            flash("Enter a valid email address.", "error")
+        elif phone and not re.fullmatch(r"\+?\d{10,15}", phone):
+            flash("Enter a valid mobile number (10-15 digits, optional leading +).", "error")
+        else:
+            connection = get_db()
+            clash = connection.execute(
+                "SELECT id FROM users WHERE email = ? AND id != ?", (email, user_id)
+            ).fetchone()
+            if clash:
+                connection.close()
+                flash("That email is already used by another account.", "error")
+                return render_template("my_settings.html", account=account)
+            try:
+                connection.execute(
+                    "UPDATE users SET email = ?, phone = ? WHERE id = ?",
+                    (email, phone or None, user_id),
+                )
+                connection.commit()
+                flash("Contact details updated.", "success")
+                return redirect(url_for("my_settings"))
+            except sqlite3.IntegrityError:
+                flash("That email is already in use.", "error")
+            finally:
+                connection.close()
+        return render_template("my_settings.html", account=account)
+    return render_template("my_settings.html", account=account)
 
 
 @app.route("/monthly-report")
