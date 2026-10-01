@@ -725,7 +725,7 @@ def attendance():
         connection.commit()
         connection.close()
         flash("Attendance saved.", "success")
-        return redirect(url_for("attendance", date=selected_date))
+        return redirect(url_for("dashboard"))
     existing_status = {row["student_id"]: row["status"] for row in connection.execute("SELECT student_id, status FROM attendance WHERE date = ?", (selected_date,)).fetchall()}
     connection.close()
     return render_template("attendance.html", students=student_rows, selected_date=selected_date, existing_status=existing_status)
