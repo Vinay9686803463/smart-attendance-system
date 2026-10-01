@@ -910,12 +910,15 @@ def monthly_report():
 def health():
     """Public diagnostics - open /health on the live site to confirm the
     server can do face recognition (needs opencv-contrib-python)."""
+    import db
     return jsonify(
         ok=True,
         cv2_available=CV2_AVAILABLE,
         cv2_version=cv2.__version__ if CV2_AVAILABLE else None,
         numpy_available=np is not None,
         face_module=bool(CV2_AVAILABLE and hasattr(cv2, "face")),
+        database=("postgres" if db.USE_POSTGRES
+                  else ("sqlite-ephemeral" if os.environ.get("VERCEL") else "sqlite-local")),
     )
 
 
