@@ -876,15 +876,8 @@ def my_settings():
     return render_template("my_settings.html", account=account)
 
 
-@app.route("/monthly-report")
-@login_required("faculty")
-def monthly_report():
-    current_month = date.today().strftime("%Y-%m")
-    selected_month = request.args.get("month", current_month)
-    try:
-        datetime.strptime(selected_month, "%Y-%m")
-    except ValueError:
-        selected_month = current_month
+def build_monthly_report(selected_month):
+    """Shared report computation for the Analytics page and its PDF download."""
     connection = get_db()
     rows = connection.execute("""
         SELECT students.id, students.name, students.register_no,
@@ -901,9 +894,84 @@ def monthly_report():
         total = present + absent
         report.append({**dict(row), "present": present, "absent": absent, "total": total, "percentage": (present / total * 100 if total else 0)})
     all_total = total_present + total_absent
-    return render_template("monthly_report.html", report=report, selected_month=selected_month,
+    return {
+        "report": report, "total_present": total_present, "total_absent": total_absent,
+        "overall_percentage": (total_present / all_total * 100 if all_total else 0),
+    }
+
+
+def resolve_month(value):
+    current_month = date.today().strftime("%Y-%m")
+    try:
+        datetime.strptime(value or "", "%Y-%m")
+        return value
+    except ValueError:
+        return current_month
+
+
+@app.route("/monthly-report")
+@login_required("faculty")
+def monthly_report():
+    selected_month = resolve_month(request.args.get("month"))
+    data = build_monthly_report(selected_month)
+    return render_template("monthly_report.html", report=data["report"], selected_month=selected_month,
         month_name=datetime.strptime(selected_month, "%Y-%m").strftime("%B"), year=selected_month[:4],
-        total_present=total_present, total_absent=total_absent, overall_percentage=(total_present / all_total * 100 if all_total else 0))
+        total_present=data["total_present"], total_absent=data["total_absent"],
+        overall_percentage=data["overall_percentage"])
+
+
+@app.route("/monthly-report.pdf")
+@login_required("faculty")
+def monthly_report_pdf():
+    """Generate Report -> direct PDF download of the same monthly report."""
+    from fpdf import FPDF
+
+    selected_month = resolve_month(request.args.get("month"))
+    data = build_monthly_report(selected_month)
+    month_label = datetime.strptime(selected_month, "%Y-%m").strftime("%B %Y")
+
+    pdf = FPDF(orientation="L", format="A4")
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.cell(0, 12, "Smart Attendance - Monthly Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 12)
+    pdf.cell(0, 8, f"{month_label}  |  Present: {data['total_present']}  |  "
+                   f"Absent: {data['total_absent']}  |  "
+                   f"Overall: {data['overall_percentage']:.1f}%", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    headers = ["#", "Student", "Register No.", "Present", "Absent", "Total", "Attendance %"]
+    widths = [12, 80, 45, 25, 25, 25, 35]
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_fill_color(79, 70, 229)
+    pdf.set_text_color(255, 255, 255)
+    for header, width in zip(headers, widths):
+        pdf.cell(width, 10, header, border=1, fill=True)
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(0, 0, 0)
+    fill = False
+    for index, row in enumerate(data["report"], start=1):
+        if fill:
+            pdf.set_fill_color(240, 240, 255)
+        values = [str(index), str(row["name"]), str(row["register_no"]),
+                  str(row["present"]), str(row["absent"]), str(row["total"]),
+                  f"{row['percentage']:.1f}%"]
+        for value, width in zip(values, widths):
+            pdf.cell(width, 9, value, border=1, fill=fill)
+        pdf.ln()
+        fill = not fill
+    if not data["report"]:
+        pdf.cell(0, 10, "No students enrolled yet.")
+    pdf.set_text_color(110, 120, 145)
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.cell(0, 10, f"Generated on {date.today().isoformat()} by Smart Attendance.")
+    content = bytes(pdf.output())
+    return app.response_class(
+        content,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=attendance-{selected_month}.pdf"},
+    )
 
 
 @app.route("/health")

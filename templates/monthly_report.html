@@ -74,6 +74,15 @@
                 Generate Report
             </button>
 
+            <button
+                type="submit"
+                class="button secondary"
+                formaction="{{ url_for('monthly_report_pdf') }}"
+                title="Download this report as a PDF file"
+            >
+                Download PDF
+            </button>
+
         </form>
 
     </div>
