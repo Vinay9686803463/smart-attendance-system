@@ -57,6 +57,6 @@ const chartOptions={responsive:true,maintainAspectRatio:false,plugins:{legend:{p
 new Chart(document.getElementById('todayChart'),{type:'doughnut',data:{labels:['Present','Absent'],datasets:[{data:[{{ present_today }},{{ absent_today }}],backgroundColor:['#3ddc97','#f26b70'],borderWidth:0}]},options:chartOptions});
 new Chart(document.getElementById('monthChart'),{type:'bar',data:{labels:['Present','Absent'],datasets:[{label:'Attendance records',data:[{{ monthly_present }},{{ monthly_absent }}],backgroundColor:['#6c63ff','#f6b44c'],borderRadius:7}]},options:{...chartOptions,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
 </script>
-</body>
+<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script></body>
 </html>
 

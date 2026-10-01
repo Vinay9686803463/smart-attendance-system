@@ -22,6 +22,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("ATTENDANCE_SECRET_KEY", "change-this-smart-attendance-secret")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+# 10-minute idle timeout: the signed session cookie expires after 10 minutes
+# without a request, so an abandoned dashboard reopens at the login page.
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=10)
 
 BASE_DIR = Path(__file__).resolve().parent
 if os.environ.get("VERCEL"):
@@ -412,6 +415,7 @@ def login():
         connection.close()
         if user and check_password_hash(user["password_hash"], password):
             session.clear()
+            session.permanent = True
             session.update(user_id=user["id"], user_name=user["name"], role=user["role"], student_id=user["student_id"])
             flash(f"Welcome back, {user['name']}!", "success")
             return redirect(url_for("dashboard" if role == "faculty" else "my_attendance"))
