@@ -3,3 +3,5 @@ __pycache__/
 attendance.db
 .env
 .vscode/
+node_modules/
+static/faces/

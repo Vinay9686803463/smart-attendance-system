@@ -1,3 +1,5 @@
-flask
-opencv-python-headless
-pydantic
+Flask
+numpy
+opencv-contrib-python-headless
+gunicorn
+psycopg2-binary

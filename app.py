@@ -5,7 +5,6 @@ import hmac
 import os
 import re
 import secrets
-import sqlite3
 import smtplib
 import ssl
 import uuid
@@ -26,6 +25,8 @@ except ImportError:
     np = None
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from db import DatabaseIntegrityError, get_db, init_db
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("ATTENDANCE_SECRET_KEY", "change-this-smart-attendance-secret")
@@ -49,88 +50,7 @@ else:
     FACES_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def get_db():
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
 
-
-def add_column_if_missing(connection, table, column, definition):
-    columns = {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
-    if column not in columns:
-        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
-
-
-def init_db():
-    connection = get_db()
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS students (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            register_no TEXT UNIQUE NOT NULL,
-            face_image_path TEXT
-        )
-    """)
-    add_column_if_missing(connection, "students", "face_image_path", "TEXT")
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id INTEGER NOT NULL,
-            date TEXT NOT NULL,
-            status TEXT NOT NULL,
-            method TEXT NOT NULL DEFAULT 'Manual',
-            FOREIGN KEY (student_id) REFERENCES students(id)
-        )
-    """)
-    add_column_if_missing(connection, "attendance", "method", "TEXT NOT NULL DEFAULT 'Manual'")
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT,
-            phone TEXT,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('student', 'faculty')),
-            student_id INTEGER UNIQUE,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (student_id) REFERENCES students(id)
-        )
-    """)
-    add_column_if_missing(connection, "users", "email", "TEXT")
-    add_column_if_missing(connection, "users", "phone", "TEXT")
-    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL")
-    # Seed a default faculty account on a FRESH database (e.g. Vercel's
-    # ephemeral /tmp SQLite, which starts empty on every cold instance).
-    # Without this, nobody can sign in on a fresh deploy. Override via
-    # ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL env vars.
-    user_count = connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    if user_count == 0:
-        admin_user = os.environ.get("ADMIN_USERNAME", "admin").strip() or "admin"
-        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
-        admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com").strip().lower() or None
-        try:
-            connection.execute(
-                "INSERT INTO users (name, username, email, password_hash, role, student_id, created_at) VALUES (?, ?, ?, ?, 'faculty', NULL, ?)",
-                ("Administrator", admin_user, admin_email, generate_password_hash(admin_pass),
-                 datetime.now().isoformat(timespec="seconds")),
-            )
-            app.logger.warning("Seeded default faculty account '%s' (change its password after first sign-in).", admin_user)
-        except sqlite3.IntegrityError:
-            pass
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS password_reset_otps (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            otp_hash TEXT NOT NULL,
-            attempts INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL,
-            expires_at TEXT NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
-    connection.commit()
-    connection.close()
 
 
 def current_user():
@@ -558,7 +478,7 @@ def sign_up():
             connection.commit()
             flash("Account created. Please sign in.", "success")
             return redirect(url_for("login"))
-        except sqlite3.IntegrityError:
+        except DatabaseIntegrityError:
             flash("That username or email is already in use.", "error")
         finally:
             connection.close()
@@ -698,7 +618,7 @@ def add_student():
                 else:
                     flash(f"{name} was enrolled without a face photo. They can add one later from My Face Photo.", "success")
                 return redirect(url_for("students"))
-            except sqlite3.IntegrityError:
+            except DatabaseIntegrityError:
                 remove_face_image(image_path)
                 flash("That registration number already exists.", "error")
             finally:
@@ -751,7 +671,7 @@ def edit_student(student_id):
                 connection.commit()
                 flash("Student details updated.", "success")
                 return redirect(url_for("students"))
-            except sqlite3.IntegrityError:
+            except DatabaseIntegrityError:
                 flash("That registration number is already in use.", "error")
     connection.close()
     return render_template("edit_student.html", student=student)
@@ -948,7 +868,7 @@ def my_settings():
                 connection.commit()
                 flash("Contact details updated.", "success")
                 return redirect(url_for("my_settings"))
-            except sqlite3.IntegrityError:
+            except DatabaseIntegrityError:
                 flash("That email is already in use.", "error")
             finally:
                 connection.close()
