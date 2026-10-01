@@ -164,6 +164,16 @@ def save_face_image(upload, register_no):
     return f"faces/{filename}", None
 
 
+def face_file_path(relative_path):
+    """Resolve an enrolled photo on disk (works for /tmp storage on Vercel too)."""
+    if not relative_path:
+        return None
+    candidate = FACES_DIR / Path(relative_path).name
+    if candidate.is_file():
+        return candidate
+    return BASE_DIR / "static" / relative_path
+
+
 def remove_face_image(relative_path):
     """Remove only an image inside this application's face-photo directory."""
     if not relative_path:
@@ -266,7 +276,7 @@ def recognise_face(image):
         samples, labels, people = [], [], {}
         for student in enrolled:
             try:
-                saved = cv2.imread(str(BASE_DIR / "static" / student["face_image_path"]))
+                saved = cv2.imread(str(face_file_path(student["face_image_path"])))
             except (cv2.error, OSError):
                 continue
             saved_face = crop_face(saved) if saved is not None else None
@@ -589,15 +599,21 @@ def add_student():
             if duplicate:
                 flash("That registration number already exists.", "error")
                 return render_template("add_student.html", name=name, register_no=register_no)
-            image_path, error = save_face_image(request.files.get("face_image"), register_no)
-            if error:
-                flash(error, "error")
-                return render_template("add_student.html", name=name, register_no=register_no)
+            upload = request.files.get("face_image")
+            image_path, error = None, None
+            if upload and upload.filename:
+                image_path, error = save_face_image(upload, register_no)
+                if error:
+                    flash(error, "error")
+                    return render_template("add_student.html", name=name, register_no=register_no)
             connection = get_db()
             try:
                 connection.execute("INSERT INTO students (name, register_no, face_image_path) VALUES (?, ?, ?)", (name, register_no, image_path))
                 connection.commit()
-                flash(f"{name} was enrolled for face attendance.", "success")
+                if image_path:
+                    flash(f"{name} was enrolled for face attendance.", "success")
+                else:
+                    flash(f"{name} was enrolled without a face photo. They can add one later from My Face Photo.", "success")
                 return redirect(url_for("students"))
             except sqlite3.IntegrityError:
                 remove_face_image(image_path)
@@ -761,6 +777,33 @@ def student_attendance(student_id):
 @login_required("student")
 def my_attendance():
     return render_student_attendance(current_user()["student_id"], False)
+
+
+@app.route("/my-face", methods=["GET", "POST"])
+@login_required("student")
+def my_face():
+    """Let a student add or replace their own face photo (optional at enrollment)."""
+    student_id = current_user()["student_id"]
+    connection = get_db()
+    student = connection.execute("SELECT * FROM students WHERE id = ?", (student_id,)).fetchone()
+    connection.close()
+    if student is None:
+        flash("Student profile not found.", "error")
+        return redirect(url_for("my_attendance"))
+    if request.method == "POST":
+        upload = request.files.get("face_image")
+        image_path, error = save_face_image(upload, student["register_no"])
+        if error:
+            flash(error, "error")
+            return render_template("my_face.html", student=student)
+        connection = get_db()
+        connection.execute("UPDATE students SET face_image_path = ? WHERE id = ?", (image_path, student_id))
+        connection.commit()
+        connection.close()
+        remove_face_image(student["face_image_path"])
+        flash("Your face photo was saved. You can now use Face Login.", "success")
+        return redirect(url_for("my_attendance"))
+    return render_template("my_face.html", student=student)
 
 
 @app.route("/monthly-report")
