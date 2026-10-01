@@ -16,9 +16,19 @@ from werkzeug.security import generate_password_hash
 log = logging.getLogger("smart_attendance.db")
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "attendance.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 USE_POSTGRES = bool(DATABASE_URL)
+if USE_POSTGRES:
+    DB_PATH = None  # all data lives in Postgres; no local file used
+elif os.environ.get("VERCEL"):
+    # Vercel's code directory is read-only - SQLite must live in /tmp.
+    # Still ephemeral (use DATABASE_URL for persistence), but at least the
+    # function boots instead of crashing with "unable to open database file".
+    DATA_DIR = Path("/tmp/smart_attendance")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    DB_PATH = DATA_DIR / "attendance.db"
+else:
+    DB_PATH = BASE_DIR / "attendance.db"
 
 try:
     import psycopg2
