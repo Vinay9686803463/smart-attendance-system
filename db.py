@@ -17,6 +17,10 @@ log = logging.getLogger("smart_attendance.db")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if DATABASE_URL.startswith("postgres://"):
+    # Modern SQLAlchemy/driver tooling expects postgresql://, while some
+    # hosting dashboards still expose the legacy postgres:// prefix.
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 USE_POSTGRES = bool(DATABASE_URL)
 if USE_POSTGRES:
     DB_PATH = None  # all data lives in Postgres; no local file used
@@ -105,11 +109,29 @@ class _CompatConnection:
         self._connection.close()
 
 
+_last_pg_failure = 0.0
+PG_COOLDOWN_SECONDS = 30
+
+
 def get_db():
+    global _last_pg_failure
     if USE_POSTGRES:
         if psycopg2 is None:
             raise RuntimeError("DATABASE_URL is set but psycopg2 is not installed.")
-        return _CompatConnection(psycopg2.connect(DATABASE_URL))
+        # Circuit breaker: after a failed connect, fail fast for a while so a
+        # sleeping/unreachable database can never pile timeouts onto one
+        # serverless invocation (FUNCTION_INVOCATION_FAILED). The next request
+        # after cooldown tries a real connection again.
+        import time as _time
+        if _time.monotonic() - _last_pg_failure < PG_COOLDOWN_SECONDS:
+            raise TimeoutError("Database is temporarily unreachable. Please retry in a moment.")
+        try:
+            # Connections are opened and closed for each request, the equivalent
+            # of NullPool and appropriate for serverless/Postgres poolers.
+            return _CompatConnection(psycopg2.connect(DATABASE_URL, connect_timeout=5))
+        except Exception:
+            _last_pg_failure = _time.monotonic()
+            raise
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     return connection
@@ -118,11 +140,16 @@ def get_db():
 def _existing_columns(connection, table):
     if USE_POSTGRES:
         rows = connection.execute(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = ?",
+            "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = ?",
             (table,),
         ).fetchall()
         return {row["column_name"] for row in rows}
     return {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
+
+
+def is_ephemeral():
+    """True when data cannot survive restarts (Vercel /tmp SQLite, no DATABASE_URL)."""
+    return not USE_POSTGRES and bool(os.environ.get("VERCEL"))
 
 
 def add_column_if_missing(connection, table, column, definition):

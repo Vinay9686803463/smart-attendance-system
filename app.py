@@ -13,16 +13,29 @@ from email.message import EmailMessage
 from functools import wraps
 from pathlib import Path
 
-try:
-    import cv2
-    CV2_AVAILABLE = True
-except ImportError:
-    cv2 = None
-    CV2_AVAILABLE = False
-try:
-    import numpy as np
-except ImportError:
-    np = None
+# OpenCV + numpy are imported lazily via _vision() on first camera use so that
+# cold starts for login/dashboard stay fast and light on serverless hosts.
+cv2 = None
+np = None
+CV2_AVAILABLE = False
+_VISION_LOADED = False
+
+
+def _vision():
+    """Import OpenCV/numpy once and set the module globals used below."""
+    global cv2, np, CV2_AVAILABLE, _VISION_LOADED
+    if _VISION_LOADED:
+        return CV2_AVAILABLE
+    _VISION_LOADED = True
+    try:
+        import cv2 as _cv2
+        import numpy as _np
+        cv2, np = _cv2, _np
+        CV2_AVAILABLE = True
+    except ImportError:
+        cv2, np = None, None
+        CV2_AVAILABLE = False
+    return CV2_AVAILABLE
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -48,6 +61,7 @@ else:
     DB_PATH = BASE_DIR / "attendance.db"
     FACES_DIR = BASE_DIR / "static" / "faces"
     FACES_DIR.mkdir(parents=True, exist_ok=True)
+
 
 
 
@@ -83,6 +97,7 @@ def login_required(*roles):
 def save_face_image(upload, register_no):
     if not upload or not upload.filename:
         return None, "Please choose a face photo."
+    _vision()
     if not CV2_AVAILABLE or np is None:
         return None, "Photo upload is unavailable on this server right now."
     if upload.mimetype not in {"image/jpeg", "image/png", "image/webp"}:
@@ -142,6 +157,7 @@ def get_face_cascade():
     if _FACE_CASCADE_CHECKED:
         return _FACE_CASCADE
     _FACE_CASCADE_CHECKED = True
+    _vision()
     if not CV2_AVAILABLE:
         return None
     candidates = [
@@ -170,6 +186,7 @@ def _fallback_face(gray):
 
 
 def crop_face(image):
+    _vision()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     cascade = get_face_cascade()
     if cascade is None or cascade.empty():
@@ -186,6 +203,7 @@ def crop_face(image):
 
 
 def decode_camera_image(payload):
+    _vision()
     if not CV2_AVAILABLE or np is None:
         return None
     if not isinstance(payload, str) or "," not in payload:
@@ -198,6 +216,7 @@ def decode_camera_image(payload):
 
 
 def recognise_face(image):
+    _vision()
     if not CV2_AVAILABLE or np is None or not hasattr(cv2, "face"):
         return None, ("Face recognition is unavailable on this server. "
                       "Redeploy with opencv-contrib-python installed.")
@@ -205,7 +224,7 @@ def recognise_face(image):
         camera_face = crop_face(image)
         if camera_face is None:
             return None, "No clear face was found. Face the camera in good lighting and try again."
-        connection = get_db()
+        connection = get_db() # type: ignore
         enrolled = connection.execute(
             "SELECT id, name, register_no, face_image_path FROM students WHERE face_image_path IS NOT NULL"
         ).fetchall()
@@ -299,7 +318,7 @@ def send_otp_email(to_address, otp):
 
 def create_reset_otp(user_id):
     """Issue a fresh 6-digit code, replacing any earlier one. Returns the plaintext code."""
-    connection = get_db()
+    connection = get_db() # type: ignore
     connection.execute("DELETE FROM password_reset_otps WHERE user_id = ?", (user_id,))
     otp = f"{secrets.randbelow(1000000):06d}"
     now = datetime.now()
@@ -357,18 +376,43 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         role = request.form.get("role", "student")
+        if role not in {"student", "faculty"}:
+            role = "student"
         if role == "student":
             username = username.upper()
         connection = get_db()
-        user = connection.execute("SELECT * FROM users WHERE username = ? AND role = ?", (username, role)).fetchone()
+        # Case-insensitive username match so "fac001" and "FAC001" both work.
+        # Prefer an exact-case row when case-variants both exist.
+        candidates = connection.execute(
+            "SELECT * FROM users WHERE UPPER(username) = UPPER(?) AND role = ?",
+            (username, role),
+        ).fetchall()
+        user = None
+        for candidate in candidates:
+            if candidate["username"] == username:
+                user = candidate
+                break
+        if user is None and candidates:
+            user = candidates[0]
+        role_hint = None
+        if user is None and username:
+            other = connection.execute(
+                "SELECT role FROM users WHERE UPPER(username) = UPPER(?) LIMIT 1",
+                (username,),
+            ).fetchone()
+            if other is not None and other["role"] != role:
+                role_hint = other["role"]
         connection.close()
         if user and check_password_hash(user["password_hash"], password):
             session.clear()
             session.permanent = True
             session.update(user_id=user["id"], user_name=user["name"], role=user["role"], student_id=user["student_id"])
             flash(f"Welcome back, {user['name']}!", "success")
-            return redirect(url_for("dashboard" if role == "faculty" else "my_attendance"))
-        flash("Incorrect username, password, or account type.", "error")
+            return redirect(url_for("dashboard" if user["role"] == "faculty" else "my_attendance"))
+        if role_hint:
+            flash(f"That ID is registered as {role_hint}. Switch the account type to {role_hint} and try again.", "error")
+        else:
+            flash("Incorrect username, password, or account type.", "error")
     return render_template("login.html")
 
 
@@ -979,6 +1023,7 @@ def health():
     """Public diagnostics - open /health on the live site to confirm the
     server can do face recognition (needs opencv-contrib-python)."""
     import db
+    _vision()
     return jsonify(
         ok=True,
         cv2_available=CV2_AVAILABLE,
@@ -1018,6 +1063,7 @@ def scan_face_api():
 
 def decode_qr_value(image):
     """Try plain + multi QR decode so tilted/small codes still read. Returns ''."""
+    _vision()
     if not CV2_AVAILABLE:
         return ""
     try:
@@ -1090,7 +1136,50 @@ def internal_error(error):
     return render_template("error.html", error_code=500, message="An internal server error occurred."), 500
 
 
-init_db()
+import logging as _logging
+import db as _db
+
+_db_ready = False
+_db_last_attempt = 0.0
+
+
+def ensure_db():
+    """Create tables if needed. Never raises: a DB failure must degrade to an
+    error page, never crash the serverless function at import/request time."""
+    global _db_ready, _db_last_attempt
+    if _db_ready:
+        return True
+    import time as _time
+    now = _time.monotonic()
+    if now - _db_last_attempt < 60:
+        return False
+    _db_last_attempt = now
+    try:
+        _db.init_db()
+        _db_ready = True
+        return True
+    except Exception:
+        app.logger.exception("Database init failed; will retry on a later request")
+        return False
+
+
+@app.before_request
+def _ensure_db_ready():
+    ensure_db()
+
+
+try:
+    ensure_db()
+except Exception:
+    app.logger.exception("Database init failed at startup")
+
+
+if _db.is_ephemeral():
+    _logging.getLogger("smart_attendance.db").warning(
+        "Running on ephemeral /tmp SQLite (no DATABASE_URL). "
+        "Accounts and attendance will reset between instances. "
+        "Set DATABASE_URL to a hosted Postgres for persistence."
+    )
 
 if __name__ == "__main__":
     app.config["TEMPLATES_AUTO_RELOAD"] = True
