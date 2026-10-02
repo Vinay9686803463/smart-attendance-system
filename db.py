@@ -10,6 +10,12 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
 from werkzeug.security import generate_password_hash
 
@@ -35,8 +41,8 @@ else:
     DB_PATH = BASE_DIR / "attendance.db"
 
 try:
-    import psycopg2
-    import psycopg2.extras
+    import psycopg2 # type: ignore
+    import psycopg2.extras # type: ignore
 
     _PG_ERRORS = (psycopg2.IntegrityError,)
 except ImportError:  # pragma: no cover - local runs without the pg driver
