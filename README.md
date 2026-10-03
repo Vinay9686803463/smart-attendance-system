@@ -22,7 +22,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http:http://127.0.0.1:5000/login
+Open: https://smart-attendance-system-a2ib.onrender.com/login
 
 ## Deploy (Vercel)
 
