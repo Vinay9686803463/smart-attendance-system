@@ -4,3 +4,4 @@ opencv-contrib-python-headless
 gunicorn
 psycopg2-binary
 fpdf2
+python-dotenv
