@@ -1,6 +1,6 @@
 # Smart Attendance System
 
-Live demo: https://smart-attendance-system-sand-ten.vercel.app/login
+Live demo: https://smart-attendance-system-blue-seven.vercel.app/login
 
 Face + QR attendance with Flask, OpenCV and SQLite.
 
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:5000/login
+Open http:http://127.0.0.1:5000/login
 
 ## Deploy (Vercel)
 
