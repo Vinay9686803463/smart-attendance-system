@@ -53,28 +53,19 @@
 
 ### 🔐 Login
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/login.png" width="850" alt="Smart Attendance Login">
-</p>
+![Smart Attendance Login](https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/login.png)
 
 ### 📊 Dashboard
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/dashboard.png" width="850" alt="Smart Attendance Dashboard">
-</p>
+![Smart Attendance Dashboard](https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/dashboard.png)
 
 ### 📝 Attendance
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/attendance.png" width="850" alt="Attendance Management">
-</p>
+![Attendance Management](https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/attendance.png)
 
 ### 👨‍🎓 Student Management
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/students.png" width="850" alt="Student Management">
-</p>
-
+![Student Management](https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/students.png)
 ---
 
 ## 📁 Project Structure
