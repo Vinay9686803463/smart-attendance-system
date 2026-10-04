@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://smart-attendance-system-sand-ten.vercel.app/login">
+  <a href="https://smart-attendance-system-blue-seven.vercel.app/login">
     <img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-Visit%20App-success?style=for-the-badge" alt="Live Demo">
   </a>
   <a href="https://github.com/Vinay9686803463/smart-attendance-system">
@@ -46,34 +46,6 @@
 - 🔐 **Secure Authentication** — Login, password reset, OTP verification, and sessions.
 - ☁️ **Cloud Deployment** — Deployable using Vercel.
 - 📱 **Responsive UI** — Designed to work across desktop and mobile screens.
-
----
-
-## 📸 Screenshots
-
-### 🔐 Login
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/login.png" width="850" alt="Smart Attendance Login">
-</p>
-
-### 📊 Dashboard
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/dashboard.png" width="850" alt="Smart Attendance Dashboard">
-</p>
-
-### 📝 Attendance
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/attendance.png" width="850" alt="Attendance Management">
-</p>
-
-### 👨‍🎓 Student Management
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Vinay9686803463/smart-attendance-system/main/screenshots/students.png" width="850" alt="Student Management">
-</p>
 
 ---
 
@@ -203,7 +175,7 @@ This allows student records and attendance history to persist independently of s
 
 | Resource | Link |
 |---|---|
-| 🚀 **Live Demo** | [Smart Attendance Live Demo](https://smart-attendance-system-sand-ten.vercel.app/login) |
+| 🚀 **Live Demo** | [Smart Attendance Live Demo](https://smart-attendance-system-blue-seven.vercel.app/login) |
 | 💻 **GitHub Repository** | [Smart Attendance System Repository](https://github.com/Vinay9686803463/smart-attendance-system) |
 
 ---
