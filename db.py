@@ -116,28 +116,104 @@ class _CompatConnection:
 
 
 _last_pg_failure = 0.0
-PG_COOLDOWN_SECONDS = 30
+
+# Short cooldown after all PostgreSQL connection attempts fail.
+PG_COOLDOWN_SECONDS = 10
+
+# Maximum number of PostgreSQL connection attempts.
+PG_MAX_RETRIES = 3
 
 
 def get_db():
     global _last_pg_failure
+
     if USE_POSTGRES:
         if psycopg2 is None:
-            raise RuntimeError("DATABASE_URL is set but psycopg2 is not installed.")
-        # Circuit breaker: after a failed connect, fail fast for a while so a
-        # sleeping/unreachable database can never pile timeouts onto one
-        # serverless invocation (FUNCTION_INVOCATION_FAILED). The next request
-        # after cooldown tries a real connection again.
+            raise RuntimeError(
+                "DATABASE_URL is set but psycopg2 is not installed."
+            )
+
         import time as _time
-        if _time.monotonic() - _last_pg_failure < PG_COOLDOWN_SECONDS:
-            raise TimeoutError("Database is temporarily unreachable. Please retry in a moment.")
-        try:
-            # Connections are opened and closed for each request, the equivalent
-            # of NullPool and appropriate for serverless/Postgres poolers.
-            return _CompatConnection(psycopg2.connect(DATABASE_URL, connect_timeout=5))
-        except Exception:
-            _last_pg_failure = _time.monotonic()
-            raise
+
+        # Avoid repeatedly trying an unavailable database.
+        if (
+            _time.monotonic() - _last_pg_failure
+            < PG_COOLDOWN_SECONDS
+        ):
+            raise TimeoutError(
+                "Database is temporarily unreachable. "
+                "Please retry in a moment."
+            )
+
+        last_error = None
+
+        # Try PostgreSQL connection up to 3 times.
+        for attempt in range(1, PG_MAX_RETRIES + 1):
+            connection = None
+
+            try:
+                log.info(
+                    "Connecting to PostgreSQL "
+                    "(attempt %s/%s)",
+                    attempt,
+                    PG_MAX_RETRIES,
+                )
+
+                connection = psycopg2.connect(
+                    DATABASE_URL,
+                    connect_timeout=5,
+                    sslmode="require",
+                    keepalives=1,
+                    keepalives_idle=30,
+                    keepalives_interval=10,
+                    keepalives_count=3,
+                )
+
+                # Verify that the database connection is usable.
+                cursor = connection.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                cursor.close()
+
+                # Successful connection.
+                _last_pg_failure = 0.0
+
+                return _CompatConnection(connection)
+
+            except Exception as error:
+                last_error = error
+
+                log.warning(
+                    "PostgreSQL connection attempt %s/%s failed: %s",
+                    attempt,
+                    PG_MAX_RETRIES,
+                    error,
+                )
+
+                if connection is not None:
+                    try:
+                        connection.close()
+                    except Exception:
+                        pass
+
+                # Wait before trying again.
+                if attempt < PG_MAX_RETRIES:
+                    _time.sleep(0.5 * attempt)
+
+        # All connection attempts failed.
+        _last_pg_failure = _time.monotonic()
+
+        log.error(
+            "PostgreSQL unavailable after %s attempts.",
+            PG_MAX_RETRIES,
+        )
+
+        raise TimeoutError(
+            "Database is temporarily unreachable. "
+            "Please retry in a moment."
+        ) from last_error
+
+    # Local SQLite
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     return connection
@@ -146,47 +222,102 @@ def get_db():
 def _existing_columns(connection, table):
     if USE_POSTGRES:
         rows = connection.execute(
-            "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = ?",
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = ?
+            """,
             (table,),
         ).fetchall()
-        return {row["column_name"] for row in rows}
-    return {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
+
+        return {
+            row["column_name"]
+            for row in rows
+        }
+
+    return {
+        row["name"]
+        for row in connection.execute(
+            f"PRAGMA table_info({table})"
+        )
+    }
 
 
 def is_ephemeral():
-    """True when data cannot survive restarts (Vercel /tmp SQLite, no DATABASE_URL)."""
-    return not USE_POSTGRES and bool(os.environ.get("VERCEL"))
+    """Return True when database storage is temporary."""
+    return (
+        not USE_POSTGRES
+        and bool(os.environ.get("VERCEL"))
+    )
 
 
-def add_column_if_missing(connection, table, column, definition):
-    if column not in _existing_columns(connection, table):
-        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+def add_column_if_missing(
+    connection,
+    table,
+    column,
+    definition
+):
+    if column not in _existing_columns(
+        connection,
+        table
+    ):
+        connection.execute(
+            f"ALTER TABLE {table} "
+            f"ADD COLUMN {column} {definition}"
+        )
 
 
 def init_db():
     connection = get_db()
-    pk = "SERIAL PRIMARY KEY" if USE_POSTGRES else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    connection.execute(f"""
+
+    pk = (
+        "SERIAL PRIMARY KEY"
+        if USE_POSTGRES
+        else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    )
+
+    connection.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS students (
             id {pk},
             name TEXT NOT NULL,
             register_no TEXT UNIQUE NOT NULL,
             face_image_path TEXT
         )
-    """)
-    add_column_if_missing(connection, "students", "face_image_path", "TEXT")
-    connection.execute(f"""
+        """
+    )
+
+    add_column_if_missing(
+        connection,
+        "students",
+        "face_image_path",
+        "TEXT"
+    )
+
+    connection.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS attendance (
             id {pk},
             student_id INTEGER NOT NULL,
             date TEXT NOT NULL,
             status TEXT NOT NULL,
             method TEXT NOT NULL DEFAULT 'Manual',
-            FOREIGN KEY (student_id) REFERENCES students(id)
+            FOREIGN KEY (student_id)
+                REFERENCES students(id)
         )
-    """)
-    add_column_if_missing(connection, "attendance", "method", "TEXT NOT NULL DEFAULT 'Manual'")
-    connection.execute(f"""
+        """
+    )
+
+    add_column_if_missing(
+        connection,
+        "attendance",
+        "method",
+        "TEXT NOT NULL DEFAULT 'Manual'"
+    )
+
+    connection.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS users (
             id {pk},
             name TEXT NOT NULL,
@@ -194,32 +325,113 @@ def init_db():
             email TEXT,
             phone TEXT,
             password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('student', 'faculty')),
+            role TEXT NOT NULL
+                CHECK(role IN ('student', 'faculty')),
             student_id INTEGER UNIQUE,
             created_at TEXT NOT NULL,
-            FOREIGN KEY (student_id) REFERENCES students(id)
+            FOREIGN KEY (student_id)
+                REFERENCES students(id)
         )
-    """)
-    add_column_if_missing(connection, "users", "email", "TEXT")
-    add_column_if_missing(connection, "users", "phone", "TEXT")
-    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL")
-    # Seed a default faculty account on a FRESH database so the very first
-    # sign-in works. Override via ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL.
-    user_count = connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        """
+    )
+
+    add_column_if_missing(
+        connection,
+        "users",
+        "email",
+        "TEXT"
+    )
+
+    add_column_if_missing(
+        connection,
+        "users",
+        "phone",
+        "TEXT"
+    )
+
+    connection.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        users_email_unique
+        ON users(email)
+        WHERE email IS NOT NULL
+        """
+    )
+
+    # Create the default faculty account only when
+    # the users table is empty.
+    user_count = connection.execute(
+        "SELECT COUNT(*) FROM users"
+    ).fetchone()[0]
+
     if user_count == 0:
-        admin_user = os.environ.get("ADMIN_USERNAME", "admin").strip() or "admin"
-        admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
-        admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com").strip().lower() or None
+        admin_user = (
+            os.environ.get(
+                "ADMIN_USERNAME",
+                "admin"
+            ).strip()
+            or "admin"
+        )
+
+        admin_pass = os.environ.get(
+            "ADMIN_PASSWORD",
+            "admin123"
+        )
+
+        admin_email = (
+            os.environ.get(
+                "ADMIN_EMAIL",
+                "admin@example.com"
+            ).strip()
+            .lower()
+            or None
+        )
+
         try:
             connection.execute(
-                "INSERT INTO users (name, username, email, password_hash, role, student_id, created_at) VALUES (?, ?, ?, ?, 'faculty', NULL, ?)",
-                ("Administrator", admin_user, admin_email, generate_password_hash(admin_pass),
-                 datetime.now().isoformat(timespec="seconds")),
+                """
+                INSERT INTO users
+                (
+                    name,
+                    username,
+                    email,
+                    password_hash,
+                    role,
+                    student_id,
+                    created_at
+                )
+                VALUES
+                (
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    'faculty',
+                    NULL,
+                    ?
+                )
+                """,
+                (
+                    "Administrator",
+                    admin_user,
+                    admin_email,
+                    generate_password_hash(admin_pass),
+                    datetime.now().isoformat(
+                        timespec="seconds"
+                    ),
+                ),
             )
-            log.warning("Seeded default faculty account '%s'.", admin_user)
+
+            log.warning(
+                "Seeded default faculty account '%s'.",
+                admin_user
+            )
+
         except DatabaseIntegrityError:
             pass
-    connection.execute(f"""
+
+    connection.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS password_reset_otps (
             id {pk},
             user_id INTEGER NOT NULL,
@@ -227,8 +439,11 @@ def init_db():
             attempts INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             expires_at TEXT NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
         )
-    """)
+        """
+    )
+
     connection.commit()
     connection.close()
