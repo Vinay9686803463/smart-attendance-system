@@ -655,7 +655,10 @@ def add_student():
                     return render_template("add_student.html", name=name, register_no=register_no)
             connection = get_db()
             try:
-                connection.execute("INSERT INTO students (name, register_no, face_image_path) VALUES (?, ?, ?)", (name, register_no, image_path))
+                connection.execute(
+                    "INSERT INTO students (name, register_no, face_image_path) VALUES (?, ?, ?)",
+                    (name, register_no, image_path),
+                )
                 connection.commit()
                 if image_path:
                     flash(f"{name} was enrolled for face attendance.", "success")
@@ -665,6 +668,10 @@ def add_student():
             except DatabaseIntegrityError:
                 remove_face_image(image_path)
                 flash("That registration number already exists.", "error")
+            except Exception as e:
+                remove_face_image(image_path)
+                print("ADD STUDENT ERROR:", repr(e))
+                flash(f"Could not add student: {e}", "error")
             finally:
                 connection.close()
         return render_template("add_student.html", name=name, register_no=register_no)
