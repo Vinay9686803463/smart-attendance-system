@@ -1,4 +1,4 @@
-# 👋 Hi, I'm Vinay
+# 👋 Hi, I'm Vinay Sollapure
 
 > 🎓 Engineering Student | 💻 Full Stack Web Developer | 🚀 Tech Enthusiast
 
@@ -12,8 +12,9 @@ I enjoy building projects, learning new technologies, and exploring software dev
 ### 💻 Programming
 
 <p>
- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-plain.svg" width="72" height="72" />
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-plain.svg" width="72" height="72" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-plain.svg" width="65" height="65" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-plain.svg" width="65" height="65" />
 </p>
 
 **Skills**
@@ -27,9 +28,12 @@ I enjoy building projects, learning new technologies, and exploring software dev
 
 <p>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" width="65" height="65" alt="HTML5" />
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="65" height="65" alt="CSS3" />
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-plain.svg" width="65" height="65" />
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="65" height="65" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="65" height="65" alt="CSS3" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-plain.svg" width="65" height="65" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="65" height="65" />
 </p>
 
 **Skills**
@@ -44,13 +48,17 @@ I enjoy building projects, learning new technologies, and exploring software dev
 ### 🔧 Tools
 
 <p>
-<img src="https://cdn.simpleicons.org/git/F05032" width="65" height="65" />
-<a href="https://raw.githubusercontent.com/Vinay9686803463/Vinay9686803463/main/assets/github-icon.svg" target="_blank" rel="noopener noreferrer">
-  <img src="./assets/github-icon.svg" width="65" height="65" alt="GitHub" />
-</a>
-<a href="https://raw.githubusercontent.com/Vinay9686803463/Vinay9686803463/main/assets/vscode-icon.svg" target="_blank" rel="noopener noreferrer">
-  <img src="./assets/vscode-icon.svg" width="65" height="65" alt="Visual Studio Code" />
-</a>
+  <a href="https://git-scm.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://cdn.simpleicons.org/git/F05032" height="55" alt="Git" />
+  </a>
+&nbsp;&nbsp;
+  <a href="https://github.com/Vinay9686803463" target="_blank" rel="noopener noreferrer">
+    <img src="https://cdn.simpleicons.org/github/white" width="55" height="55" alt="GitHub" />
+  </a>
+&nbsp;&nbsp;
+  <a href="https://code.visualstudio.com/" target="_blank" rel="noopener noreferrer">
+    <img src="./assets/vscode-icon.svg" height="55" alt="Visual Studio Code" />
+  </a>
 </p>
 
 **Skills**
@@ -65,6 +73,7 @@ I enjoy building projects, learning new technologies, and exploring software dev
 
 <p>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-plain.svg" width="65" height="65" />
+  &nbsp;&nbsp;
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-plain.svg" width="65" height="65" />
 </p>
 
@@ -81,15 +90,30 @@ I enjoy building projects, learning new technologies, and exploring software dev
 
 ## 🚀 Featured Projects
 
-### 🌐 Web Development Projects
+### 📊 Smart Attendance System
 
-- **Web Development Project**  
-  A responsive website built using HTML, CSS and JavaScript.
+> A web-based attendance management platform for managing students, faculty, attendance records, authentication, and cloud-based data.
+
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/) [![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+
+**Features**
+
+- 👨‍🎓 Student management
+- 👨‍🏫 Faculty & student authentication
+- 📝 Attendance management
+- 📊 Attendance history & reports
+- 📷 Face recognition attendance
+- 📱 QR code attendance
+- 🔑 Password reset / OTP
+- ☁️ Supabase PostgreSQL database
+- 📱 Responsive web application
+- 🚀 Cloud deployment
+
+🔗 **Repository:** https://github.com/Vinay9686803463/smart-attendance-system
+
+🌐 **Live Demo:** https://smart-attendance-system-blue-seven.vercel.app/login
 
 
-> 🚀 More projects will be added as I continue learning and building.
-
----
 
 ## 📊 GitHub
 
@@ -100,26 +124,42 @@ I enjoy building projects, learning new technologies, and exploring software dev
   />
 </p>
 
----
 
-## 📫 Connect With Me
+
+# 📫 Connect With Me
 
 <p align="left">
-<a href="https://github.com/Vinay9686803463" target="_blank" rel="noopener noreferrer">
-<img src="./assets/github-icon.svg" width="65" height="65" alt="GitHub">
+
+<a href="https://github.com/Vinay9686803463">
+  <img src="https://skillicons.dev/icons?i=github" width="50"/>
 </a>
-<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=vinayssollapure@gmail.com" target="_blank" rel="noopener noreferrer">
-<img src="./assets/gmail-icon.svg" width="65" height="65" alt="Email">
-</a>
-<a href="https://www.linkedin.com/in/vinay-sollapure-94474b2a4/" target="_blank" rel="noopener noreferrer">
-<img src="./assets/linkedin-icon.svg" width="65" height="65" alt="LinkedIn">
-</a>
+&nbsp;&nbsp;
+<a href="https://www.linkedin.com/in/vinay-sollapure-94474b2a4/">
+  <img src="https://skillicons.dev/icons?i=linkedin" width="50"/>
+  </a>
+&nbsp;&nbsp;
+<a href="https://mail.google.com/mail/?view=cm&fs=1&to=vinayssollapure@gmail.com">
+  <img src="https://img.icons8.com/color/48/gmail-new.png" width="50"/>
+  </a>
+
 </p>
 
+* 💼 **LinkedIn:**
+  https://www.linkedin.com/in/vinay-sollapure-94474b2a4/
+
+* 🐙 **GitHub:**
+  https://github.com/Vinay9686803463
+
+* 📧 **Email:**
+  https://mail.google.com/mail/?view=cm&fs=1&to=vinayssollapure@gmail.com
 ---
 
-<p align="left">
+<p align="center">
+
+### 🚀 Build. Learn. Experiment. Ship.
+
 ⭐ Thanks for visiting my profile!
+
 </p>
 
 <p align="left">
