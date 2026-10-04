@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 64 64" role="img" aria-labelledby="title">
+  <title id="title">Gmail</title>
+  <circle cx="48" cy="48" r="32" fill="#f5f7fa"/>
+  <path fill="#ea4335" d="M78 31.14v37.09c0 2.41-1.95 4.36-4.36 4.36H63.45V47.87L48 59.45 32.55 47.87v24.72H22.36A4.36 4.36 0 0 1 18 68.23V31.14c0-5.39 6.16-8.47 10.47-5.24l3.62 2.65L48 40.51l15.91-11.96 3.62-2.65C71.84 22.67 78 25.75 78 31.14Z"/>
+</svg>

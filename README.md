@@ -202,4 +202,8 @@ Built as a full-stack web application to explore **Flask, database management, a
 
 <p align="center">
   ⭐ If you find this project useful, consider giving it a star on GitHub!
+<<<<<<< HEAD
 </p>
+=======
+</p>
+>>>>>>> 1b0b2440c1456500e59b160b5e2f0b72bb73440d
