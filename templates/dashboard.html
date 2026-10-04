@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<main class="dashboard">
+    <div class="topbar">
+        <div><p class="eyebrow">SMART PEOPLE · SMARTER SYSTEMS</p><h1>Smart Attendance</h1></div>
+        <div class="user-menu"><span>Faculty · {{ current_user.user_name }}</span><a href="{{ url_for('logout') }}" class="button secondary small">Sign out</a></div>
+    </div>
+    <nav class="navbar">
+        <a class="active" href="{{ url_for('dashboard') }}">⌂ Dashboard</a>
+        <a href="{{ url_for('scan_face') }}">⌁ Scan attendance</a>
+        <a href="{{ url_for('add_student') }}">＋ Enroll student</a>
+        <a href="{{ url_for('students') }}">♚ Students</a>
+        <a href="{{ url_for('attendance') }}">✓ Manual marking</a>
+        <a href="{{ url_for('attendance_records') }}">▤ Records</a>
+        <a href="{{ url_for('monthly_report') }}">▥ Analytics</a>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+
+    <section class="hero-panel">
+        <div><p class="eyebrow">TODAY'S ATTENDANCE</p><h2>Ready to mark attendance?</h2><p>Use a camera for face recognition or scan a student QR code. All records are saved instantly.</p></div>
+        <div class="hero-actions"><a class="hero-action face" href="{{ url_for('scan_face') }}"><span>◉</span><b>Face Login</b><small>Recognize & mark</small></a><a class="hero-action qr" href="{{ url_for('scan_face') }}#qr"><span>▣</span><b>Scan QR</b><small>Fast check-in</small></a></div>
+    </section>
+
+    <section class="cards">
+        <article class="card"><span class="card-icon">♚</span><h2>Total Students</h2><p>{{ total_students }}</p><small>Registered students</small></article>
+        <article class="card"><span class="card-icon present-icon">✓</span><h2>Present Today</h2><p>{{ present_today }}</p><small>Checked in today</small></article>
+        <article class="card"><span class="card-icon absent-icon">−</span><h2>Absent Today</h2><p>{{ absent_today }}</p><small>Marked absent</small></article>
+        <article class="card"><span class="card-icon">▥</span><h2>Attendance</h2><p>{{ '%.1f'|format(attendance_percentage) }}%</p><small>Today's rate</small></article>
+    </section>
+
+    <section class="quick-grid">
+        <a class="quick-card" href="{{ url_for('scan_face') }}"><span>◉</span><div><b>Face recognition</b><small>Mark with webcam verification</small></div><i>→</i></a>
+        <a class="quick-card" href="{{ url_for('scan_face') }}#qr"><span>▣</span><div><b>QR check-in</b><small>Scan student QR codes</small></div><i>→</i></a>
+        <a class="quick-card" href="{{ url_for('attendance') }}"><span>✓</span><div><b>Manual attendance</b><small>Mark the whole class</small></div><i>→</i></a>
+        <a class="quick-card" href="{{ url_for('monthly_report') }}"><span>▥</span><div><b>Reports & analytics</b><small>Review monthly trends</small></div><i>→</i></a>
+    </section>
+
+    <section class="dashboard-grid">
+        <article class="chart-card"><h2>Today's attendance</h2><div class="chart-container"><canvas id="todayChart"></canvas></div></article>
+        <article class="chart-card"><h2>This month's activity</h2><div class="chart-container"><canvas id="monthChart"></canvas></div></article>
+    </section>
+
+    <section class="table-card recent-card"><div class="section-header"><div><p class="eyebrow">LIVE RECORDS</p><h2>Recent attendance</h2></div><a href="{{ url_for('attendance_records') }}" class="button">View all</a></div><div class="table-wrapper"><table><thead><tr><th>Date</th><th>Student</th><th>Register no.</th><th>Method</th><th>Status</th></tr></thead><tbody>{% for record in recent_records %}<tr><td>{{ record.date }}</td><td>{{ record.name }}</td><td>{{ record.register_no }}</td><td><span class="method">{{ record.method }}</span></td><td><span class="status-{{ record.status|lower }}">{{ record.status }}</span></td></tr>{% else %}<tr><td colspan="5" class="empty-message">No attendance records yet. Start by enrolling a student or marking attendance.</td></tr>{% endfor %}</tbody></table></div></section>
+</main>
+<script>
+const chartOptions={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}};
+new Chart(document.getElementById('todayChart'),{type:'doughnut',data:{labels:['Present','Absent'],datasets:[{data:[{{ present_today }},{{ absent_today }}],backgroundColor:['#3ddc97','#f26b70'],borderWidth:0}]},options:chartOptions});
+new Chart(document.getElementById('monthChart'),{type:'bar',data:{labels:['Present','Absent'],datasets:[{label:'Attendance records',data:[{{ monthly_present }},{{ monthly_absent }}],backgroundColor:['#6c63ff','#f6b44c'],borderRadius:7}]},options:{...chartOptions,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+</script>
+<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script></body>
+</html>
+

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Mark Attendance</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <a href="{{ url_for('dashboard') }}" class="back-link">← Back to dashboard</a>
+
+    <h1>Mark Attendance</h1>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+        <a href="{{ url_for('add_student') }}">Add Student</a>
+
+        <a href="{{ url_for('students') }}">Students</a>
+
+        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
+
+        <a href="{{ url_for('attendance_records') }}">
+            Records
+        </a>
+
+        <a href="{{ url_for('monthly_report') }}">
+            Monthly Report
+        </a>
+
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="form-container">
+
+        <form method="POST">
+
+            <div class="form-group">
+
+                <label for="attendance_date">
+                    Attendance Date
+                </label>
+
+                <input
+                    type="date"
+                    id="attendance_date"
+                    name="attendance_date"
+                    value="{{ selected_date }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="table-card">
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>ID</th>
+
+                                <th>Student</th>
+
+                                <th>Registration No.</th>
+
+                                <th>Present</th>
+
+                                <th>Absent</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for student in students %}
+
+                            <tr>
+
+                                <td>
+                                    {{ student["id"] }}
+                                </td>
+
+                                <td>
+                                    {{ student["name"] }}
+                                </td>
+
+                                <td>
+                                    {{ student["register_no"] }}
+                                </td>
+
+                                <td>
+
+                                    <input
+                                        type="radio"
+                                        name="status_{{ student['id'] }}"
+                                        value="Present"
+                                        {% if existing_status.get(student["id"]) == "Present" %}
+                                        checked
+                                        {% endif %}
+                                        required
+                                    >
+
+                                </td>
+
+                                <td>
+
+                                    <input
+                                        type="radio"
+                                        name="status_{{ student['id'] }}"
+                                        value="Absent"
+                                        {% if existing_status.get(student["id"]) == "Absent" %}
+                                        checked
+                                        {% endif %}
+                                    >
+
+                                </td>
+
+                            </tr>
+
+                            {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="empty-message"
+                                >
+                                    No students available.
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            {% if students %}
+
+            <button
+                type="submit"
+                class="save-btn"
+            >
+                Save Attendance
+            </button>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script></body>
+</html>

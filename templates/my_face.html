@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Face Photo | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="dashboard">
+    <a href="{{ url_for('my_attendance') }}" class="back-link">← Back to my attendance</a>
+    <div class="topbar">
+        <div><p class="eyebrow">OPTIONAL SETUP</p><h1>My face photo</h1></div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <section class="form-container">
+        <p class="form-note">Hi {{ student['name'] }} — add a clear front-facing photo so Face Login recognises you. You can replace it anytime.</p>
+        <p class="form-note">Current status: <b>{% if student['face_image_path'] %}photo saved ✓{% else %}no photo yet{% endif %}</b></p>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group"><label for="face_image">Face photo</label><input id="face_image" type="file" name="face_image" accept="image/jpeg,image/png,image/webp" required><small class="input-help">JPG, PNG, or WEBP · maximum 5 MB · well-lit, front-facing.</small></div>
+            <button type="submit" class="save-btn">Save face photo</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Monthly Attendance Report</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <a href="{{ url_for('dashboard') }}" class="back-link">← Back to dashboard</a>
+
+    <h1>Monthly Attendance Report</h1>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+        <a href="{{ url_for('add_student') }}">Add Student</a>
+
+        <a href="{{ url_for('students') }}">Students</a>
+
+        <a href="{{ url_for('attendance') }}">Mark Attendance</a>
+
+        <a href="{{ url_for('attendance_records') }}">
+            Records
+        </a>
+
+        <a href="{{ url_for('monthly_report') }}">
+            Monthly Report
+        </a>
+
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="filter-card">
+
+        <form method="GET">
+
+            <label for="month">
+                Select Month
+            </label>
+
+            <input
+                type="month"
+                id="month"
+                name="month"
+                value="{{ selected_month }}"
+                required
+            >
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Generate Report
+            </button>
+
+            <button
+                type="submit"
+                class="button secondary"
+                formaction="{{ url_for('monthly_report_pdf') }}"
+                title="Download this report as a PDF file"
+            >
+                Download PDF
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <div class="report-heading">
+
+        <h2>
+            {{ month_name }} {{ year }}
+        </h2>
+
+    </div>
+
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h2>Total Present</h2>
+
+            <p>{{ total_present }}</p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>Total Absent</h2>
+
+            <p>{{ total_absent }}</p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>Overall Attendance</h2>
+
+            <p>
+                {{ "%.1f"|format(overall_percentage) }}%
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-card">
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Student</th>
+                        <th>Registration No.</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Total</th>
+                        <th>Percentage</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for student in report %}
+
+                    <tr>
+
+                        <td>
+                            {{ student["name"] }}
+                        </td>
+
+                        <td>
+                            {{ student["register_no"] }}
+                        </td>
+
+                        <td>
+                            {{ student["present"] }}
+                        </td>
+
+                        <td>
+                            {{ student["absent"] }}
+                        </td>
+
+                        <td>
+                            {{ student["total"] }}
+                        </td>
+
+                        <td>
+
+                            <strong>
+                                {{ "%.1f"|format(student["percentage"]) }}%
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty-message"
+                        >
+                            No students available.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>/* idle-logout: 10-minute inactivity auto sign-out */(function(){var LIMIT=10*60*1000,t;function out(){window.location.href="{{ url_for('logout') }}";}function arm(){clearTimeout(t);t=setTimeout(out,LIMIT);}['mousemove','mousedown','keydown','touchstart','scroll'].forEach(function(e){window.addEventListener(e,arm,{passive:true});});arm();})();</script></body>
+</html>

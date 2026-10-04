@@ -1,1 +1,11 @@
+<<<<<<< HEAD
 package-lock.json
+=======
+__pycache__/
+*.pyc
+attendance.db
+.env
+.vscode/
+node_modules/
+static/faces/
+>>>>>>> origin/main
