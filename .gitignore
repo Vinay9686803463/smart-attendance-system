@@ -9,3 +9,5 @@ attendance.db
 node_modules/
 static/faces/
 >>>>>>> origin/main
+.vercel
+.env*

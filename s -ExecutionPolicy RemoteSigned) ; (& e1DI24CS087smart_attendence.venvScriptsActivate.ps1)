@@ -1,0 +1,58 @@
+9812935 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Merge remote changes and resolve README conflict
+f73848d | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Update live demo link
+36515c8 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Improve PostgreSQL connection reliability
+1b0b244 | Author: Vinay Sollapure <199556538+Vinay9686803463@users.noreply.github.com> | Update README with new demo link and cleanup
+8de2531 | Author: Vinay Sollapure <199556538+Vinay9686803463@users.noreply.github.com> | Revise README for Smart Attendance System
+224f06e | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix README and add screenshots
+4f443cc | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix README and add screenshots
+5058122 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Merge remote main and update README
+e63efa0 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Add gitignore
+05da2c3 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update README
+7e0300e | Author: Vinay Sollapure <199556538+Vinay9686803463@users.noreply.github.com> | Update README.md
+148e432 | Author: Vinay Sollapure <199556538+Vinay9686803463@users.noreply.github.com> | Update login URL to use HTTPS
+6322202 | Author: Vinay Sollapure <199556538+Vinay9686803463@users.noreply.github.com> | Fix live demo link and URL format in README
+4d83533 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix Vercel Flask routing
+b977eee | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Add python-dotenv dependency
+970bd65 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Agent host session 4818c7c5-1483-4bba-ad4e-4310a6341aec - turn 1
+2007e76 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Agent host session 4818c7c5-1483-4bba-ad4e-4310a6341aec - turn 1 start
+8e84d0b | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Agent host session 4818c7c5-1483-4bba-ad4e-4310a6341aec - baseline checkpoint
+1e40439 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Connect app to Supabase PostgreSQL
+2d43ec6 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix Vercel 500: lazy cv2 import, guarded DB init, fail-fast PG breaker, modern vercel.json
+e49dd58 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | postgresql://postgres:[Vinayak@9686]@db.nwclzjlpyrspxldliifk.supabase.co:5432/postgres
+15baba0 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | postgresql://postgres:[Vinay@9686]@db.nwclzjlpyrspxdliifk.supabase.co:5432/postgres
+0764c65 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Deploy with Supabase DATABASE_URL
+b21bdef | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Deploy with Supabase DATABASE_URL
+f4c1d89 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Analytics report downloads directly as PDF
+2af7dd2 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Return to dashboard after saving manual attendance
+c9ab626 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Health reports database mode; point demo link at live production URL
+11831d5 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Use legacy routes for Flask path preservation on Vercel
+9045462 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix Vercel rewrite destination to docs-exact api path
+c8c7960 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix Vercel function crash: SQLite to writable tmp when no DATABASE_URL
+5f6d118 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Persistent database via Postgres on Vercel; SQLite locally; harden deploy config
+795f3fe | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Faculty-only attendance marking; student portal is register face and QR only; resilient cv2 import plus health check
+d2e8ce1 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Student settings: change email, mobile and password with validation
+2264ada | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Camera opens only on Face/QR tab, back arrow on login camera, reset credentials on role switch
+d725979 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Optional face photo on enroll, student self-upload, face and QR sign-in
+e7b2a51 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Configure vercel routing and entry point
+3a2de5d | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Auto sign-out after 10 minutes idle (server session + browser timer)
+13fea30 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Add back-to-dashboard arrow links on all faculty pages
+c8aab8a | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Add live demo link and deploy docs to README
+4c33908 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Seed default faculty admin on fresh DB so sign-in works on Vercel
+7393ac0 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Fix requirements: restore numpy, contrib headless opencv for face login
+07fedc2 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Add Vercel serverless entrypoint and ignore rules
+46c5bd6 | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Add Vercel configuration
+878695f | Author: Vinay9686803463 <199556538+Vinay9686803463@users.noreply.github.com> | Initial commit
+6c4a781 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Match programming icon sizes
+aacaf54 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Match contact icon sizes
+8add7c2 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update README
+e47dba6 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update README
+f134f53 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update README
+d16f95f | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Simplify profile icon styling
+d5b32c1 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Link tool icons to image previews
+ec1e05f | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Left align contact icons
+85502aa | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Refine profile icon layout
+9c34dbc | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Improve profile contact icons
+c08781f | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update profile README
+1bf5c2f | Author: vishal-s-sollapure <vishalssollapure@gmail.com> | Update profile README
+62fcaf8 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Update README.md
+f25f1a8 | Author: Vinay9686803463 <vinayssollapure@gmail.com> | Initial commit
