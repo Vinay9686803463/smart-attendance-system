@@ -1,13 +1,27 @@
-<<<<<<< HEAD
-package-lock.json
-=======
+# Python
 __pycache__/
 *.pyc
-attendance.db
+.venv/
+venv/
+
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+
+# Local database
+attendance.db
+*.db
+
+# VS Code
 .vscode/
+
+# Node.js
 node_modules/
+package-lock.json
+
+# Face recognition files
 static/faces/
->>>>>>> origin/main
-.vercel
-.env*
+
+# Vercel
+.vercel/
